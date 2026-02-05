@@ -41,13 +41,15 @@ export default function NewIncidentScreen({ navigation }: any) {
         nivel_urgencia: Math.max(1, Math.min(5, Number(nivelUrgencia) || 3)),
       };
 
-      const { error } = await supabase.from('incidents').insert(payload as any);
+      const { error } = await supabase.from('incidents').insert(payload);
       if (error) throw error;
 
       Alert.alert('OK', 'Chamado aberto com sucesso.');
-      navigation.goBack();
+      if (navigation && typeof navigation.goBack === 'function') navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Falha ao abrir chamado');
+      const err = e as unknown;
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('Erro', msg || 'Falha ao abrir chamado');
     } finally {
       setBusy(false);
     }

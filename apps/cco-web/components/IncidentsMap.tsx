@@ -59,18 +59,17 @@ export default function IncidentsMap({
 
       {incidents.map((i) => {
         const isSelected = i.id === selectedId;
+        const size = isSelected ? 28 : 16;
+        const color = markerColor(i.status);
+        const html = `
+          <div style="width:${size}px;height:${size}px;border-radius:999px;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.35);"></div>
+        `;
+
         const icon = L.divIcon({
           className: '',
-          html: 
-            <div style="
-              width:px;
-              height:px;
-              border-radius:999px;
-              background:;
-              border:2px solid white;
-              box-shadow:0 1px 4px rgba(0,0,0,.35);
-            "></div>
-          ,
+          html,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
         });
 
         return (
