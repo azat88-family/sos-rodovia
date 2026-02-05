@@ -31,7 +31,8 @@ async function fetchMyProfile(): Promise<UserProfile | null> {
     .maybeSingle();
 
   if (error) throw error;
-  return data as any;
+  const profileData = data as UserProfile | null;
+  return profileData ?? null;
 }
 
 export default function App() {
@@ -75,7 +76,7 @@ export default function App() {
     };
   }, []);
 
-  const initialRoute = useMemo(() => {
+  const initialRoute = useMemo<keyof RootStackParamList>(() => {
     if (!sessionUserId) return 'Login';
     if (!profile) return 'Login';
     return profile.role === 'driver' ? 'DriverHome' : 'OperatorHome';
@@ -91,7 +92,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute as any}>
+      <Stack.Navigator initialRouteName={initialRoute}>
         <Stack.Screen name='Login' component={LoginScreen} options={{ title: 'Entrar' }} />
         <Stack.Screen name='DriverHome' component={DriverHomeScreen} options={{ title: 'Motorista' }} />
         <Stack.Screen name='OperatorHome' component={OperatorHomeScreen} options={{ title: 'CCO' }} />

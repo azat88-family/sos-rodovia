@@ -12,9 +12,15 @@ interface Profile {
   foto_url?: string;
 }
 
+interface SupabaseUser {
+  id: string;
+  email?: string | null;
+  last_sign_in_at?: string | null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,16 +109,16 @@ export default function DashboardPage() {
               
               <div className="space-y-2 text-gray-700">
                 <p><strong>Email:</strong> {user?.email}</p>
-                <p><strong>Última autenticação:</strong> {new Date(user?.last_sign_in_at).toLocaleString('pt-BR')}</p>
+                <p><strong>Última autenticação:</strong> {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('pt-BR') : '—'}</p>
               </div>
             </div>
 
             {profile && (
-              <div className="rounded-lg bg-white-6 shadow">
+              <div className="rounded-lg bg-white shadow">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Dados do Operador
                 </h2>
-                <div className="space-y-2 text-black-700">
+                <div className="space-y-2 text-gray-700">
                   <p><strong>Nome:</strong> {profile.nome_completo}</p>
                   <p><strong>Matrícula:</strong> {profile.matricula}</p>
                 </div>
