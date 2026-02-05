@@ -19,6 +19,32 @@ export default function ProfilePhotoCapture({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Add video event listeners to improve readiness detection
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onCanPlay = () => {
+      console.log('video canplay — dimensions', video.videoWidth, video.videoHeight);
+      setReady(true);
+    };
+
+    const onPlay = () => {
+      console.log('video play event');
+      setReady(true);
+    };
+
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('play', onPlay);
+
+    return () => {
+      video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('play', onPlay);
+    };
+  }, [videoRef.current]);
 
   // Para a câmera quando o componente é desmontado
   useEffect(() => {
@@ -26,11 +52,16 @@ export default function ProfilePhotoCapture({
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [stream]);
 
   const startCamera = async () => {
     try {
+      console.log('Solicitando permissão da câmera...');
+      setReady(false);
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'user',
@@ -41,9 +72,15 @@ export default function ProfilePhotoCapture({
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        // Aguarda o vídeo carregar
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
+        // Aguarda o vídeo carregar e marca como pronto
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current?.play();
+          } catch (e) {
+            console.warn('Falha ao dar play automaticamente:', e);
+          }
+          console.log('onloadedmetadata —', videoRef.current?.videoWidth, videoRef.current?.videoHeight);
+          setReady(true);
         };
       }
       
@@ -63,6 +100,7 @@ export default function ProfilePhotoCapture({
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    setReady(false);
     setCapturing(false);
   };
 
@@ -77,6 +115,18 @@ export default function ProfilePhotoCapture({
     const context = canvas.getContext('2d');
 
     if (!context) return;
+
+    console.log('Tentando capturar — ready:', ready, 'videoW/H:', video.videoWidth, video.videoHeight);
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.error('Dimensões do vídeo inválidas no capture:', video.videoWidth, video.videoHeight);
+      alert('A câmera ainda não terminou de carregar. Tente novamente.');
+      return;
+    }
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      alert('A câmera ainda não terminou de carregar. Tente novamente.');
+      return;
+    }
 
     // Proporção 3x4 (largura x altura)
     const aspectRatio = 3 / 4;
@@ -108,6 +158,10 @@ export default function ProfilePhotoCapture({
         return;
       }
 
+      // Criar pré-visualização imediata localmente para não depender do upload
+      const objectUrl = URL.createObjectURL(blob);
+      setPreviewUrl(objectUrl);
+
       setUploading(true);
       stopCamera();
 
@@ -127,11 +181,15 @@ export default function ProfilePhotoCapture({
           .from('profile-photos')
           .getPublicUrl(fileName);
 
-        onPhotoUploaded(data.publicUrl);
-        alert('✅ Foto atualizada com sucesso!');
+        // Notifica o pai apenas se upload obteve URL pública
+        if (data?.publicUrl) {
+          onPhotoUploaded(data.publicUrl);
+          alert('✅ Foto atualizada com sucesso!');
+        }
       } catch (error) {
         console.error('Erro no upload:', error);
-        alert('❌ Erro ao fazer upload da foto!');
+        // Mantemos a pré-visualização local mesmo em caso de falha no servidor
+        alert('❌ Erro ao fazer upload da foto! A pré-visualização local foi mantida.');
       } finally {
         setUploading(false);
       }
@@ -181,6 +239,7 @@ export default function ProfilePhotoCapture({
           <div className="flex gap-3">
             <button
               onClick={capturePhoto}
+              disabled={!ready || uploading}
               className="rounded bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 transition-colors shadow-md"
             >
               ✓ Capturar

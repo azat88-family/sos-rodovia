@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profilesAvailable, setProfilesAvailable] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -42,27 +43,59 @@ export default function DashboardPage() {
   }, [router]);
 
   const loadProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    if (!profilesAvailable) return;
 
-    if (data) {
-      setProfile(data);
+    try {
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao carregar profile:', error, 'status:', status);
+        // Se o servidor retornou 5xx, marcamos como indisponível para evitar loops
+        if (status && status >= 500) {
+          setProfilesAvailable(false);
+          // Define um profile fallback para manter a UI utilizável
+          setProfile({
+            id: userId,
+            nome_completo: '(indisponível)',
+            matricula: '—',
+          });
+        }
+        return;
+      }
+
+      if (data) {
+        setProfile(data);
+      }
+    } catch (e) {
+      console.error('Exceção ao carregar profile:', e);
+      setProfilesAvailable(false);
     }
   };
 
   const handlePhotoUploaded = async (url: string) => {
     if (!user) return;
+    if (!profilesAvailable) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ foto_url: url })
-      .eq('id', user.id);
+    try {
+      const { error, status } = await supabase
+        .from('profiles')
+        .update({ foto_url: url })
+        .eq('id', user.id);
 
-    if (!error) {
+      if (error) {
+        console.error('Erro ao atualizar foto:', error, 'status:', status);
+        if (status && status >= 500) setProfilesAvailable(false);
+        return;
+      }
+
       await loadProfile(user.id);
+    } catch (e) {
+      console.error('Exceção ao atualizar foto:', e);
+      setProfilesAvailable(false);
     }
   };
 
