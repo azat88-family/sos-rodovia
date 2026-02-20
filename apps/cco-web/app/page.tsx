@@ -6,15 +6,25 @@ import { useRouter } from 'next/navigation';
 
 export default function Page() {
   const router = useRouter();
-  const [email, setEmail] = useState('teste@teste.com');
-  const [password, setPassword] = useState('test123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        router.replace('/admin/dashboard');
+      } else {
         router.replace('/cco/dashboard');
       }
     };
@@ -24,33 +34,33 @@ export default function Page() {
   const signIn = async () => {
     setBusy(true);
     setError(null);
-    
-    console.log('🔍 Iniciando login...');
-    console.log('📧 Email:', email);
-    
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      
-      console.log('✅ Data:', data);
-      console.log('❌ Error:', error);
-      
-      setBusy(false);
-      
+
       if (error) {
-        console.error('🚨 Erro:', error.message);
-        return setError(error.message);
+        setError(error.message);
+        return;
       }
-      
-      console.log('🎉 Login bem-sucedido! Redirecionando...');
-      router.replace('/cco/dashboard');
-      
-    } catch (err) {
-      console.error('💥 Exception:', err);
-      setBusy(false);
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        router.replace('/admin/dashboard');
+      } else {
+        router.replace('/cco/dashboard');
+      }
+    } catch {
       setError('Erro inesperado ao fazer login');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -60,7 +70,7 @@ export default function Page() {
         <h2 className="text-center text-3xl font-bold text-gray-900">
           CCO - Login
         </h2>
-        
+
         {error && (
           <div className="rounded bg-red-50 p-3 text-red-600 text-sm">
             ❌ {error}
