@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface ProfilePhotoCaptureProps {
@@ -9,126 +9,106 @@ interface ProfilePhotoCaptureProps {
   onPhotoUploaded: (url: string) => void;
 }
 
-export default function ProfilePhotoCapture({ 
-  userId, 
-  currentPhotoUrl, 
-  onPhotoUploaded 
+export default function ProfilePhotoCapture({
+  userId,
+  currentPhotoUrl,
+  onPhotoUploaded,
 }: ProfilePhotoCaptureProps) {
   const [capturing, setCapturing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  // Add video event listeners to improve readiness detection
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Listeners de readiness do vídeo
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onCanPlay = () => {
-      console.log('video canplay — dimensions', video.videoWidth, video.videoHeight);
-      setReady(true);
-    };
+    const onReady = () => setReady(true);
 
-    const onPlay = () => {
-      console.log('video play event');
-      setReady(true);
-    };
-
-    video.addEventListener('canplay', onCanPlay);
-    video.addEventListener('play', onPlay);
+    video.addEventListener('canplay', onReady);
+    video.addEventListener('play', onReady);
 
     return () => {
-      video.removeEventListener('canplay', onCanPlay);
-      video.removeEventListener('play', onPlay);
+      video.removeEventListener('canplay', onReady);
+      video.removeEventListener('play', onReady);
     };
-  }, [videoRef.current]);
+  }, [capturing]); // roda quando a câmera abre/fecha
 
-  // Para a câmera quando o componente é desmontado
+  // Cleanup ao desmontar
   useEffect(() => {
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      stream?.getTracks().forEach((t) => t.stop());
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    stream?.getTracks().forEach((t) => t.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setStream(null);
+    setReady(false);
+    setCapturing(false);
   }, [stream]);
 
   const startCamera = async () => {
+    setError(null);
+    setSuccess(false);
+    setReady(false);
+
     try {
-      console.log('Solicitando permissão da câmera...');
-      setReady(false);
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
           facingMode: 'user',
           width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
+          height: { ideal: 480 },
+        },
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        // Aguarda o vídeo carregar e marca como pronto
         videoRef.current.onloadedmetadata = async () => {
           try {
             await videoRef.current?.play();
-          } catch (e) {
-            console.warn('Falha ao dar play automaticamente:', e);
+          } catch {
+            // autoplay bloqueado pelo browser — ignorado, canplay vai disparar
           }
-          console.log('onloadedmetadata —', videoRef.current?.videoWidth, videoRef.current?.videoHeight);
           setReady(true);
         };
       }
-      
+
       setStream(mediaStream);
       setCapturing(true);
-    } catch (error) {
-      alert('❌ Erro ao acessar câmera!\n\nVerifique se:\n1. Você permitiu o acesso à câmera\n2. Nenhum outro programa está usando a câmera\n3. Está usando HTTPS ou localhost');
-      console.error('Erro na câmera:', error);
+    } catch {
+      setError(
+        'Não foi possível acessar a câmera. Verifique as permissões e tente novamente.'
+      );
     }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setReady(false);
-    setCapturing(false);
   };
 
   const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) {
-      alert('Erro ao capturar foto!');
-      return;
-    }
-
+    setError(null);
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
 
+    if (!video || !canvas) return;
+
+    const context = canvas.getContext('2d');
     if (!context) return;
 
-    console.log('Tentando capturar — ready:', ready, 'videoW/H:', video.videoWidth, video.videoHeight);
-
     if (video.videoWidth === 0 || video.videoHeight === 0) {
-      console.error('Dimensões do vídeo inválidas no capture:', video.videoWidth, video.videoHeight);
-      alert('A câmera ainda não terminou de carregar. Tente novamente.');
-      return;
-    }
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      alert('A câmera ainda não terminou de carregar. Tente novamente.');
+      setError('A câmera ainda não terminou de carregar. Tente novamente.');
       return;
     }
 
-    // Proporção 3x4 (largura x altura)
+    // Proporção 3x4
     const aspectRatio = 3 / 4;
     const width = 300;
     const height = width / aspectRatio; // 400px
@@ -136,16 +116,15 @@ export default function ProfilePhotoCapture({
     canvas.width = width;
     canvas.height = height;
 
-    // Calcula crop centralizado
     const videoRatio = video.videoWidth / video.videoHeight;
-    let sx = 0, sy = 0, sWidth = video.videoWidth, sHeight = video.videoHeight;
+    let sx = 0, sy = 0;
+    let sWidth = video.videoWidth;
+    let sHeight = video.videoHeight;
 
     if (videoRatio > aspectRatio) {
-      // Vídeo mais largo, corta laterais
       sWidth = video.videoHeight * aspectRatio;
       sx = (video.videoWidth - sWidth) / 2;
     } else {
-      // Vídeo mais alto, corta topo/base
       sHeight = video.videoWidth / aspectRatio;
       sy = (video.videoHeight - sHeight) / 2;
     }
@@ -154,12 +133,13 @@ export default function ProfilePhotoCapture({
 
     canvas.toBlob(async (blob) => {
       if (!blob) {
-        alert('Erro ao processar imagem!');
+        setError('Erro ao processar a imagem capturada.');
         return;
       }
 
-      // Criar pré-visualização imediata localmente para não depender do upload
+      // Preview local imediato
       const objectUrl = URL.createObjectURL(blob);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(objectUrl);
 
       setUploading(true);
@@ -167,13 +147,10 @@ export default function ProfilePhotoCapture({
 
       try {
         const fileName = `${userId}/${Date.now()}.jpg`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
-          .upload(fileName, blob, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
+          .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
         if (uploadError) throw uploadError;
 
@@ -181,31 +158,43 @@ export default function ProfilePhotoCapture({
           .from('profile-photos')
           .getPublicUrl(fileName);
 
-        // Notifica o pai apenas se upload obteve URL pública
         if (data?.publicUrl) {
           onPhotoUploaded(data.publicUrl);
-          alert('✅ Foto atualizada com sucesso!');
+          setSuccess(true);
         }
-      } catch (error) {
-        console.error('Erro no upload:', error);
-        // Mantemos a pré-visualização local mesmo em caso de falha no servidor
-        alert('❌ Erro ao fazer upload da foto! A pré-visualização local foi mantida.');
+      } catch {
+        setError('Erro ao fazer upload da foto. A pré-visualização foi mantida.');
       } finally {
         setUploading(false);
       }
     }, 'image/jpeg', 0.9);
   };
 
+  const photoToShow = previewUrl ?? currentPhotoUrl;
+
   return (
     <div className="space-y-4">
-      {/* Foto atual ou placeholder (proporção 3x4) */}
+
+      {error && (
+        <div className="rounded bg-red-50 p-3 text-red-600 text-sm">
+          ❌ {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded bg-green-50 p-3 text-green-600 text-sm">
+          ✅ Foto atualizada com sucesso!
+        </div>
+      )}
+
+      {/* Foto atual / preview */}
       {!capturing && (
         <div className="flex flex-col items-center">
           <div className="w-48 h-64 rounded-lg overflow-hidden bg-gray-200 border-4 border-gray-300 shadow-md">
-            {currentPhotoUrl ? (
-              <img 
-                src={currentPhotoUrl} 
-                alt="Foto do perfil" 
+            {photoToShow ? (
+              <img
+                src={photoToShow}
+                alt="Foto do perfil"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -224,7 +213,7 @@ export default function ProfilePhotoCapture({
         </div>
       )}
 
-      {/* Visualização da câmera (proporção 3x4) */}
+      {/* Câmera */}
       {capturing && (
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-48 h-64 rounded-lg overflow-hidden border-4 border-blue-500 shadow-lg">
@@ -240,7 +229,7 @@ export default function ProfilePhotoCapture({
             <button
               onClick={capturePhoto}
               disabled={!ready || uploading}
-              className="rounded bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 transition-colors shadow-md"
+              className="rounded bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 transition-colors shadow-md disabled:opacity-50"
             >
               ✓ Capturar
             </button>
