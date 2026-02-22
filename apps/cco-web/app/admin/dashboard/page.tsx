@@ -36,7 +36,6 @@ export default function AdminDashboard() {
       setError(null);
 
       try {
-        // Verifica se o usuário logado é admin
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           router.replace('/');
@@ -54,7 +53,6 @@ export default function AdminDashboard() {
           return;
         }
 
-        // Busca operadores
         const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('id, nome_completo, matricula, email, foto_url, ativo')

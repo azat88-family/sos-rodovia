@@ -65,9 +65,21 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow">
-        <h2 className="text-center text-3xl font-bold text-gray-900">
+    <div
+      className="flex min-h-screen items-center justify-center relative"
+      style={{
+        backgroundImage: "url('/login.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Overlay escuro */}
+      <div className="absolute inset-0 bg-black/70" />
+
+      {/* Card de login */}
+      <div className="relative z-10 w-full max-w-md space-y-8 rounded-lg bg-blue p-8 shadow-xl">
+        <h2 className="text-center text-3xl font-bold text-black-900">
           CCO - Login
         </h2>
 
@@ -79,27 +91,27 @@ export default function Page() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-white-700">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded border border-yellow-300 px-3 py-2 text-limon green focus:border-blue-500 focus:outline-none"
               disabled={busy}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-limon-700">
               Senha
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded border border-yellow-300 px-3 py-2 text-lime green focus:border-blue-500 focus:outline-none"
               disabled={busy}
             />
           </div>
@@ -107,7 +119,7 @@ export default function Page() {
           <button
             onClick={signIn}
             disabled={busy}
-            className="w-full rounded bg-blue-600 py-2 text-white font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="w-full rounded bg-blue-600 py-2 text-black font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
           >
             {busy ? 'Entrando...' : 'Entrar'}
           </button>
