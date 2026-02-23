@@ -22,7 +22,7 @@ export default function Page() {
         .eq('id', user.id)
         .single();
 
-      if (profile?.role === 'admin') {
+      if (profile?.role === 'administrador') {        // ✅ linha 24 - corrigido
         router.replace('/admin/dashboard');
       } else {
         router.replace('/cco/dashboard');
@@ -41,7 +41,7 @@ export default function Page() {
         password,
       });
 
-      if (error) {
+      if (error) {                                    // ✅ linha 43 - verificação de erro primeiro
         setError(error.message);
         return;
       }
@@ -52,9 +52,13 @@ export default function Page() {
         .eq('id', data.user.id)
         .single();
 
-      if (profile?.role === 'admin') {
+      if (profile?.role === 'administrador') {        // ✅ linha 53 - corrigido
+        setEmail('');                                 // ✅ limpa email
+        setPassword('');                              // ✅ limpa senha
         router.replace('/admin/dashboard');
       } else {
+        setEmail('');                                 // ✅ limpa email
+        setPassword('');                              // ✅ limpa senha
         router.replace('/cco/dashboard');
       }
     } catch {
@@ -78,40 +82,42 @@ export default function Page() {
       <div className="absolute inset-0 bg-black/70" />
 
       {/* Card de login */}
-      <div className="relative z-10 w-full max-w-md space-y-8 rounded-lg bg-blue p-8 shadow-xl">
-        <h2 className="text-center text-3xl font-bold text-black-900">
+      <div className="relative z-10 w-full max-w-md space-y-8 rounded-lg bg-black/60 p-8 shadow-xl border border-yellow-200">
+        <h2 className="text-center text-3xl font-bold text-yellow-200">
           CCO - Login
         </h2>
 
         {error && (
-          <div className="rounded bg-red-50 p-3 text-red-600 text-sm">
+          <div className="rounded bg-red-900/70 p-3 text-red-300 text-sm border border-red-500">
             ❌ {error}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white-700">
+            <label className="block text-sm font-medium text-yellow-300">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded border border-yellow-300 px-3 py-2 text-limon green focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded border border-yellow-400 bg-black/40 px-3 py-2 text-white placeholder-lime-300 focus:border-yellow-300 focus:outline-none focus:ring-1 focus:ring-yellow-300"
+              placeholder="seu@email.com"
               disabled={busy}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-limon-700">
+            <label className="block text-sm font-medium text-yellow-300">
               Senha
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-yellow-300 px-3 py-2 text-lime green focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded border border-yellow-400 bg-black/40 px-3 py-2 text-white placeholder-lime-300 focus:border-yellow-300 focus:outline-none focus:ring-1 focus:ring-yellow-300"
+              placeholder="••••••••"
               disabled={busy}
             />
           </div>
@@ -119,7 +125,7 @@ export default function Page() {
           <button
             onClick={signIn}
             disabled={busy}
-            className="w-full rounded bg-blue-600 py-2 text-black font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="w-full rounded bg-yellow-200 py-2 text-black font-bold hover:bg-yellow-300 disabled:bg-gray-600 disabled:text-gray-400 transition-colors"
           >
             {busy ? 'Entrando...' : 'Entrar'}
           </button>

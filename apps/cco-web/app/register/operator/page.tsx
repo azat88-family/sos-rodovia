@@ -1,3 +1,5 @@
+import RegisterForm from '@/components/RegisterForm';
+
 export default function OperatorRegister() {
   return (
     <div
@@ -9,12 +11,11 @@ export default function OperatorRegister() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      <div className="absolute inset-0 bg-white/70" />
-      <div className="relative z-10 w-full max-w-md bg-white p-6 rounded shadow">
-        <h1 className="text-xl font-bold mb-4">Cadastrar Operador</h1>
-        <RegisterForm role="operador" />
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="relative z-10 w-full max-w-md bg-black/60 p-6 rounded shadow-xl border border-yellow-400">
+        <h1 className="text-xl font-bold mb-4 text-yellow-200">Cadastrar Operador</h1>
+        <RegisterForm role="operator" />
       </div>
     </div>
   );
 }
-

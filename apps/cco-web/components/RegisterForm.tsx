@@ -60,72 +60,71 @@ export default function RegisterForm({ role }: Props) {
     }
   };
 
+  const inputClass = "mt-1 block w-full rounded border border-yellow-200 bg-black/40 px-3 py-2 text-white placeholder-lime-300 focus:border-yellow-200 focus:outline-none focus:ring-1 focus:ring-yellow-200";
+  const labelClass = "block text-sm font-medium text-yellow-200";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
       {error && (
-        <div className="rounded bg-red-50 p-3 text-red-600 text-sm">
+        <div className="rounded bg-red-900/70 p-3 text-red-300 text-sm border border-red-500">
           ❌ {error}
         </div>
       )}
 
       {success && (
-        <div className="rounded bg-green-50 p-3 text-green-600 text-sm">
+        <div className="rounded bg-lime-900/70 p-3 text-lime-300 text-sm border border-lime-500">
           ✅ Cadastro realizado com sucesso!
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Nome completo
-        </label>
+        <label className={labelClass}>Nome completo</label>
         <input
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           required
-          className="mt-1 block w-full rounded border px-3 py-2"
+          className={inputClass}
           disabled={loading}
+          placeholder="Nome completo"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Matrícula
-        </label>
+        <label className={labelClass}>Matrícula</label>
         <input
           value={matricula}
           onChange={(e) => setMatricula(e.target.value)}
           required
-          className="mt-1 block w-full rounded border px-3 py-2"
+          className={inputClass}
           disabled={loading}
+          placeholder="Ex: 0042"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Email
-        </label>
+        <label className={labelClass}>Email</label>
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           type="email"
           required
-          className="mt-1 block w-full rounded border px-3 py-2"
+          className={inputClass}
           disabled={loading}
+          placeholder="operador@email.com"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Senha
-        </label>
+        <label className={labelClass}>Senha</label>
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           required
-          className="mt-1 block w-full rounded border px-3 py-2"
+          className={inputClass}
           disabled={loading}
+          placeholder="••••••••"
         />
       </div>
 
@@ -133,7 +132,7 @@ export default function RegisterForm({ role }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50 hover:bg-blue-700 transition-colors"
+          className="rounded bg-yellow-400 px-4 py-2 text-black font-bold disabled:opacity-50 hover:bg-yellow-300 transition-colors"
         >
           {loading ? 'Cadastrando...' : `Cadastrar ${role === 'admin' ? 'Admin' : 'Operador'}`}
         </button>

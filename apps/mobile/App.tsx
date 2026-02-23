@@ -19,14 +19,15 @@ type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Só essa função muda:
 async function fetchMyProfile(): Promise<UserProfile | null> {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return null;
 
   const { data, error } = await supabase
-    .from('users')
-    .select('id, role, full_name, phone')
+    .from('profiles')           // ← corrigido de 'users'
+    .select('id, role, nome_completo, matricula')
     .eq('id', user.id)
     .maybeSingle();
 
