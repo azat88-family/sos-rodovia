@@ -25,7 +25,7 @@ export default function LoginPage() {
     }
 
     const role = data.user?.user_metadata?.role;
-    if (role === 'admin') {
+    if (role === 'administrador') {
       router.replace('/admin/dashboard');
     } else {
       router.replace('/cco/dashboard');

@@ -17,7 +17,7 @@ export default function AdminRegister() {
         </p>
         <pre className="bg-black/80 border border-yellow-200/40 p-3 rounded text-sm overflow-auto text-lime-300">
 {`insert into public.profiles (id, nome_completo, matricula, role)
-values ('00000000-...', 'Admin Name', '0001', 'admin');`}
+values ('00000000-...', 'Admin Name', '0001', 'administrador');`}
         </pre>
       </div>
     </div>
