@@ -64,7 +64,7 @@ export default function CTASection() {
                 👤 CADASTRAR OPERADOR
               </Link>
               <Link
-                href="/register/user"
+                href="/register/motorista"
                 className="border-2 border-gray-600 hover:border-[#FF6B00] text-white font-black px-10 py-4 rounded-lg text-lg transition-all hover:scale-105"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
               >

@@ -94,7 +94,7 @@ export default function HeroSection() {
             👤 CADASTRAR OPERADOR
           </Link>
           <Link
-            href="/register/user"
+            href="/register/motorista"
             className="w-full sm:w-auto bg-transparent border-2 border-gray-600 hover:border-[#FF6B00] text-white font-black px-8 py-4 rounded-lg text-lg tracking-wide transition-all hover:scale-105"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
