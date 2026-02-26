@@ -4,6 +4,12 @@ export const inputClass = `
   placeholder-gray-600 transition-all text-sm
 `;
 
+export const selectClass = `
+  w-full bg-white border border-gray-700 text-black rounded-lg px-4 py-3
+  focus:outline-none focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00]
+  transition-all text-sm
+`;
+
 export const labelClass = `
   block text-gray-400 text-xs font-bold tracking-widest uppercase mb-1.5
 `;

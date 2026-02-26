@@ -1,7 +1,19 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, labelClass, lgpdNote, sectionTitle, navButtons } from './styles';
+
+function useObjectUrl(file: File | null) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) { setUrl(null); return; }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+  return url;
+}
 
 type Props = {
   data: FormData;
@@ -12,6 +24,8 @@ type Props = {
 };
 
 export default function Step5Documentos({ data, update, onPrev, onFinish, loading }: Props) {
+  const cnhPhotoUrl = useObjectUrl(data.cnh_photo);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onFinish();
@@ -50,8 +64,8 @@ export default function Step5Documentos({ data, update, onPrev, onFinish, loadin
           <div className="w-full h-44 rounded-xl bg-white/10 border-2 border-dashed border-gray-600
             flex flex-col items-center justify-center gap-2 overflow-hidden relative cursor-pointer
             hover:border-[#FF6B00]/50 transition-all">
-            {data.cnh_photo ? (
-              <img src={URL.createObjectURL(data.cnh_photo)}
+            {cnhPhotoUrl ? (
+              <img src={cnhPhotoUrl}
                 className="w-full h-full object-cover" alt="CNH" />
             ) : (
               <>
@@ -78,8 +92,8 @@ export default function Step5Documentos({ data, update, onPrev, onFinish, loadin
           className="mt-1 w-4 h-4 accent-[#FF6B00] cursor-pointer" />
         <span className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">
           Li e concordo com os{' '}
-          <a href="#" className="text-[#FF6B00] underline">Termos de Uso</a> e a{' '}
-          <a href="#" className="text-[#FF6B00] underline">Política de Privacidade</a> da
+          <a href="/termos" className="text-[#FF6B00] underline">Termos de Uso</a> e a{' '}
+          <a href="/privacidade" className="text-[#FF6B00] underline">Política de Privacidade</a> da
           plataforma SOS-Rodovias, em conformidade com a Lei nº 13.709/2018 (LGPD).
         </span>
       </label>

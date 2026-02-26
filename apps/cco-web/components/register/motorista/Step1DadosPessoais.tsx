@@ -1,7 +1,19 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
-import { inputClass, labelClass, lgpdNote, sectionTitle } from './styles';
+import { inputClass, selectClass, labelClass, lgpdNote, sectionTitle } from './styles';
+
+function useObjectUrl(file: File | null) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) { setUrl(null); return; }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+  return url;
+}
 
 type Props = {
   data: FormData;
@@ -10,6 +22,8 @@ type Props = {
 };
 
 export default function Step1DadosPessoais({ data, update, onNext }: Props) {
+  const photoUrl = useObjectUrl(data.photo);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onNext();
@@ -23,8 +37,8 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
       <div className="flex flex-col items-center gap-3">
         <div className="w-24 h-24 rounded-full bg-white/10 border-2 border-dashed border-gray-600
           flex items-center justify-center text-4xl overflow-hidden">
-          {data.photo
-            ? <img src={URL.createObjectURL(data.photo)} className="w-full h-full object-cover" alt="foto" />
+          {photoUrl
+            ? <img src={photoUrl} className="w-full h-full object-cover" alt="foto" />
             : '📷'}
         </div>
         <label className="cursor-pointer text-sm text-[#FF6B00] font-bold hover:underline">
@@ -61,7 +75,7 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
 
         <div>
           <label className={labelClass}>Gênero</label>
-          <select className={inputClass}
+          <select className={selectClass}
             value={data.gender} onChange={(e) => update({ gender: e.target.value })}>
             <option value="">Selecione...</option>
             <option value="M">Masculino</option>

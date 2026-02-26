@@ -1,7 +1,19 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, labelClass, lgpdNote, sectionTitle, navButtons } from './styles';
+
+function useObjectUrl(file: File | null) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) { setUrl(null); return; }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+  return url;
+}
 
 type Props = {
   data: FormData;
@@ -11,6 +23,8 @@ type Props = {
 };
 
 export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
+  const vehiclePhotoUrl = useObjectUrl(data.vehicle_photo);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onNext();
@@ -23,8 +37,8 @@ export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
       {/* Foto do veículo */}
       <div className="w-full h-40 rounded-xl bg-white/10 border-2 border-dashed border-gray-600
         flex flex-col items-center justify-center gap-2 overflow-hidden relative">
-        {data.vehicle_photo ? (
-          <img src={URL.createObjectURL(data.vehicle_photo)}
+        {vehiclePhotoUrl ? (
+          <img src={vehiclePhotoUrl}
             className="w-full h-full object-cover" alt="veículo" />
         ) : (
           <>
