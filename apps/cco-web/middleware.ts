@@ -6,6 +6,8 @@ const PUBLIC_PATHS = [
   '/login',
   '/register',
   '/register/motorista',
+  '/register/operator',
+  '/register/admin',
 ];
 
 export function middleware(request: NextRequest) {
