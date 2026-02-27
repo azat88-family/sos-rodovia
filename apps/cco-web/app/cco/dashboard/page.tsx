@@ -1,199 +1,142 @@
-'use client';
+'use client'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import ProfilePhotoCapture from '@/components/ProfilePhotoCapture';
-
-interface Profile {
-  id: string;
-  nome_completo: string;
-  matricula: string;
-  foto_url?: string;
+type Incident = {
+  id: string
+  status: string
+  latitude: number
+  longitude: number
+  created_at: string
+  driver: {
+    nome: string
+    email: string
+    telefone?: string
+  }
 }
 
-interface SupabaseUser {
-  id: string;
-  email?: string | null;
-  last_sign_in_at?: string | null;
-}
-
-export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profilesAvailable, setProfilesAvailable] = useState(true);
+export default function CCODashboard() {
+  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [selected, setSelected] = useState<Incident | null>(null)
+  const [hasNew, setHasNew] = useState(false)
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.replace('/login');
-        return;
-      }
-      
-      setUser(user);
-      await loadProfile(user.id);
-      setLoading(false);
-    };
-    
-    checkUser();
-  }, [router]);
+    // Busca inicial
+    supabase
+      .from('incidents')
+      .select('*, driver:profiles!driver_id(nome, email)')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setIncidents(data ?? []))
 
-  const loadProfile = async (userId: string) => {
-  if (!profilesAvailable) return;
+    // Realtime — escuta novos chamados
+    const channel = supabase
+      .channel('incidents-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'incidents',
+      }, (payload) => {
+        setIncidents(prev => [payload.new as Incident, ...prev])
+        setHasNew(true)
+      })
+      .subscribe()
 
-  try {
-    const { data, error, status } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Erro ao carregar profile:', error, 'status:', status);
-      if (status && status >= 500) {
-        setProfilesAvailable(false);
-        setProfile({ id: userId, nome_completo: '(indisponível)', matricula: '—' });
-      }
-      return;
-    }
-
-    if (data) {
-      setProfile(data);
-    } else {
-      // Perfil não existe ainda — cria um básico
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert({ id: userId, nome_completo: 'Operador', matricula: '—' })
-        .select()
-        .single();
-
-      if (!insertError && newProfile) {
-        setProfile(newProfile);
-      }
-    }
-  } catch (e) {
-    console.error('Exceção ao carregar profile:', e);
-    setProfilesAvailable(false);
-  }
-};
-
-  const handlePhotoUploaded = async (url: string) => {
-    if (!user) return;
-    if (!profilesAvailable) return;
-
-    try {
-      const { error, status } = await supabase
-        .from('profiles')
-        .update({ foto_url: url })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Erro ao atualizar foto:', error, 'status:', status);
-        if (status && status >= 500) setProfilesAvailable(false);
-        return;
-      }
-
-      await loadProfile(user.id);
-    } catch (e) {
-      console.error('Exceção ao atualizar foto:', e);
-      setProfilesAvailable(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
-  };
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">Carregando...</div>
-      </div>
-    );
-  }
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">
-              CCO Dashboard
-            </h1>
+    <div className="flex h-screen bg-slate-900 text-white">
+
+      {/* PAINEL ESQUERDO — lista chamados */}
+      <div className={`${selected ? 'w-[30%]' : 'w-full'} transition-all border-r border-slate-700 overflow-y-auto`}>
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <h1 className="text-xl font-bold">Central de Operações</h1>
+          {hasNew && (
+            <span className="animate-pulse bg-red-500 text-white text-xs px-3 py-1 rounded-full">
+              NOVO CHAMADO
+            </span>
+          )}
+        </div>
+
+        <div className="p-4 space-y-3">
+          {incidents.map(incident => (
             <button
-              onClick={handleLogout}
-              className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 transition-colors"
+              key={incident.id}
+              onClick={() => { setSelected(incident); setHasNew(false) }}
+              className={`w-full text-left p-4 rounded-xl border transition-all
+                ${incident.status === 'open'
+                  ? 'border-red-500 bg-red-500/10 animate-pulse hover:animate-none hover:bg-red-500/20'
+                  : 'border-slate-600 bg-slate-800 hover:bg-slate-700'
+                }`}
             >
-              Sair
+              <div className="flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${incident.status === 'open' ? 'bg-red-500' : 'bg-yellow-400'}`} />
+                <span className="font-semibold">{incident.driver?.nome ?? 'Motorista'}</span>
+              </div>
+              <p className="text-slate-400 text-sm mt-1">
+                {new Date(incident.created_at).toLocaleTimeString('pt-BR')}
+              </p>
+            </button>
+          ))}
+
+          {incidents.length === 0 && (
+            <p className="text-slate-500 text-center mt-12">Nenhum chamado aberto</p>
+          )}
+        </div>
+      </div>
+
+      {/* PAINEL DIREITO — detalhes do chamado (Picture-in-Picture) */}
+      {selected && (
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">🚨 Chamado em Atendimento</h2>
+            <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-white text-2xl">✕</button>
+          </div>
+
+          {/* Dados do motorista */}
+          <div className="bg-slate-800 rounded-2xl p-6 mb-4 space-y-3">
+            <h3 className="text-lg font-semibold text-red-400">👤 Dados do Motorista</h3>
+            <p><span className="text-slate-400">Nome:</span> {selected.driver?.nome}</p>
+            <p><span className="text-slate-400">Email:</span> {selected.driver?.email}</p>
+            <p><span className="text-slate-400">Localização:</span> {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}</p>
+            <p><span className="text-slate-400">Chamado em:</span> {new Date(selected.created_at).toLocaleString('pt-BR')}</p>
+          </div>
+
+          {/* Mapa (iframe Google Maps) */}
+          <div className="rounded-2xl overflow-hidden mb-4">
+            <iframe
+              width="100%"
+              height="300"
+              style={{ border: 0 }}
+              src={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}&z=15&output=embed`}
+            />
+          </div>
+
+          {/* Ações */}
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                await supabase.from('incidents').update({ status: 'in_progress' }).eq('id', selected.id)
+                setSelected(prev => prev ? { ...prev, status: 'in_progress' } : null)
+              }}
+              className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-xl"
+            >
+              ▶ Iniciar Atendimento
+            </button>
+            <button
+              onClick={async () => {
+                await supabase.from('incidents').update({ status: 'closed' }).eq('id', selected.id)
+                setIncidents(prev => prev.filter(i => i.id !== selected.id))
+                setSelected(null)
+              }}
+              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl"
+            >
+              ✅ Encerrar Chamado
             </button>
           </div>
         </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Coluna Principal - Informações */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Informações da Conta
-              </h2>
-              
-              <div className="space-y-2 text-gray-700">
-                <p><strong>Email:</strong> {user?.email}</p>
-                <p><strong>Última autenticação:</strong> {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('pt-BR') : '—'}</p>
-              </div>
-            </div>
-
-            {profile && (
-              <div className="rounded-lg bg-white shadow">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Dados do Operador
-                </h2>
-                <div className="space-y-2 text-gray-700">
-                  <p><strong>Nome:</strong> {profile.nome_completo}</p>
-                  <p><strong>Matrícula:</strong> {profile.matricula}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Coluna Lateral - Foto e Identificação */}
-          <div className="lg:col-span-1">
-            <div className="rounded-lg bg-white p-6 shadow sticky top-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                Perfil do Operador
-              </h2>
-
-              {user && (
-                <ProfilePhotoCapture
-                  userId={user.id}
-                  currentPhotoUrl={profile?.foto_url}
-                  onPhotoUploaded={handlePhotoUploaded}
-                />
-              )}
-
-              {profile && (
-                <div className="mt-6 text-center border-t pt-4">
-                  <h3 className="font-bold text-lg text-gray-900">
-                    {profile.nome_completo}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Matrícula: {profile.matricula}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-        </div>
-      </main>
+      )}
     </div>
-  );
+  )
 }
