@@ -1,0 +1,320 @@
+# ========================================
+# AI CONTEXT - SOS RODOVIA
+# ========================================
+
+**Gerado em:** 27/02/2026 17:21
+
+## 1. ESTRUTURA DO PROJETO
+```
+
+```
+
+## 2. TYPES
+```typescript
+arquivo não encontrado
+```
+
+## 3. LIB SUPABASE
+```typescript
+arquivo não encontrado
+```
+
+## 4. SCHEMA DO BANCO
+```sql
+-- /workspaces/sos-rodovia/supabase/funcionarios.sql
+-- Tabela de funcionários recomendada para Supabase (Postgres)
+-- Execute no SQL Editor do Supabase
+
+-- 1) Habilitar extensão para gen_random_uuid (pgcrypto)
+create extension if not exists pgcrypto;
+
+-- 2) Criar tabela
+create table if not exists public.funcionarios (
+  id uuid primary key default gen_random_uuid(),
+  -- opcional: vincular ao auth.users
+  auth_user_id uuid references auth.users(id) on delete set null,
+
+  -- DADOS PESSOAIS
+  nome_completo varchar(150) not null,
+  nome_social varchar(150),
+  data_nascimento date not null,
+  sexo varchar(20),
+  estado_civil varchar(30),
+  nacionalidade varchar(50),
+
+  -- DOCUMENTOS
+  cpf varchar(14) unique not null,
+  rg varchar(20),
+  orgao_emissor varchar(20),
+  data_emissao_rg date,
+  pis_pasep varchar(20),
+  ctps_numero varchar(20),
+  ctps_serie varchar(20),
+
+  -- CONTATO
+  email varchar(150) unique,
+  telefone varchar(20),
+  telefone_emergencia varchar(20),
+  contato_emergencia varchar(150),
+
+  -- ENDEREÇO
+  cep varchar(10),
+  endereco varchar(150),
+  numero varchar(10),
+  complemento varchar(50),
+  bairro varchar(100),
+  cidade varchar(100),
+  estado varchar(50),
+  pais varchar(50) default 'Brasil',
+
+  -- DADOS PROFISSIONAIS
+  cargo varchar(100) not null,
+  departamento varchar(100),
+  tipo_contrato varchar(50), -- CLT, PJ, Estágio, Temporário
+  data_admissao date not null,
+  data_demissao date,
+  salario numeric(12,2),
+  carga_horaria varchar(50),
+  turno varchar(50),
+
+  -- DADOS BANCÁRIOS (sensiveis)
+  banco varchar(100),
+  agencia varchar(20),
+  conta varchar(30),
+  tipo_conta varchar(20),
+  chave_pix varchar(150),
+
+  -- FOTO
+  foto_url text,
+
+  -- STATUS
+  ativo boolean default true,
+  observacoes text,
+
+  -- AUDITORIA
+  criado_em timestamptz default now(),
+  atualizado_em timestamptz default now()
+);
+
+-- 3) Trigger para atualizar `atualizado_em`
+create or replace function public.fn_update_timestamp()
+returns trigger as $$
+begin
+  new.atualizado_em = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trg_update_timestamp
+before update on public.funcionarios
+for each row
+execute function public.fn_update_timestamp();
+
+-- 4) Indexes úteis
+create index if not exists idx_funcionarios_cpf on public.funcionarios (cpf);
+create index if not exists idx_funcionarios_email on public.funcionarios (email);
+create index if not exists idx_funcionarios_cargo on public.funcionarios (cargo);
+
+-- 5) Row Level Security (RLS) e policies básicas
+alter table public.funcionarios enable row level security;
+
+-- Permitimos que usuários autenticados leiam seu próprio registro caso `auth_user_id` esteja preenchido
+create policy "funcionarios_select_own" on public.funcionarios
+  for select using (
+    (auth.role() = 'authenticated' and auth.uid() = auth_user_id)
+  );
+
+-- Permitimos que usuários autenticados atualizem seu próprio registro (menos campos sensíveis)
+-- Para maior segurança, recomenda-se usar uma função/stored procedure para updates que valida quais campos podem ser alterados.
+create policy "funcionarios_update_own" on public.funcionarios
+  for update using (
+    (auth.role() = 'authenticated' and auth.uid() = auth_user_id)
+  );
+
+-- Admin (server-side/service) policies devem ser feitas com service_role key ou uma claim específica
+-- Aqui apenas um exemplo: permitir seleção/insert/update via service role (server trusted)
+create policy "funcionarios_manage_service_role" on public.funcionarios
+  for all using (true) with check (true);
+
+-- NOTE: The above policy "funcionarios_manage_service_role" is permissive; in production
+-- you should NOT attach a permissive policy for clients. Use the service_role key on server-side only.
+
+-- 6) Recomendações de segurança e modelagem:
+-- - Separe dados sensíveis (dados bancários, CPF) em tabela com acesso restrito se necessário.
+-- - Valide CPF/telefone/email no client/server antes de inserir.
+-- - Para auditoria mais rica, mantenha uma tabela de histórico (logs) em vez de sobrescrever.
+-- - Considere normalizar endereço em tabela separada se houver muitos endereços por funcionário.
+-- - Para integração com Auth do Supabase, use `auth_user_id` referenciando `auth.users(id)`.
+
+-- 7) Exemplo de insert (teste):
+-- insert into public.funcionarios (nome_completo, data_nascimento, cpf, cargo, data_admissao)
+-- values ('Fulano de Tal', '1990-01-01', '000.000.000-00', 'Operador', '2024-01-01');
+
+-- /workspaces/sos-rodovia/supabase/init.sql
+-- Supabase initialization SQL for sos-rodovia
+-- Run this in Supabase SQL editor (Project > SQL)
+
+-- 1) Create profiles table (if not exists)
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  nome_completo text,
+  matricula text,
+  foto_url text,
+  role text default 'operator' check (role in ('operator','admin')),
+  created_at timestamptz default now()
+);
+
+-- 2) Enable Row Level Security and add simple policies
+alter table public.profiles enable row level security;
+
+-- allow users to insert their own profile row (from client) when authenticated
+create policy "Allow insert for authenticated" on public.profiles
+  for insert using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated' and (role = 'operator' or role is null));
+
+-- allow users to select/update their own profile
+create policy "Users can select their profile" on public.profiles
+  for select using (auth.role() = 'authenticated' and id = auth.uid());
+
+create policy "Users can update their profile" on public.profiles
+  for update using (auth.role() = 'authenticated' and id = auth.uid());
+
+-- allow admins (service accounts) to select/update/insert for management
+-- Note: service_role should be used only from server side
+create policy "Admins can manage profiles" on public.profiles
+  for all using (exists (select 1 from auth.roles r where r.role = 'supabase_admin'));
+
+-- 3) Optional: index on matricula
+create index if not exists idx_profiles_matricula on public.profiles (matricula);
+
+-- 4) Example insert: create a manual admin profile (only for testing via SQL editor)
+-- replace the UUID with the auth.users id of the admin user created via Supabase Auth
+-- insert into public.profiles (id, nome_completo, matricula, role) values ('00000000-0000-0000-0000-000000000000','Admin Test','0001','admin');
+
+-- Notes:
+-- - The policies above are conservative: client can insert/select/update their own rows.
+-- - Admin-level management should be done from a trusted server using the service_role key.
+-- - If you need admins with elevated DB permissions, store a separate admin table or use custom claims in JWT.
+
+
+-- /workspaces/sos-rodovia/supabase/update_profiles_safe.sql
+-- Script seguro e idempotente para ajustar a tabela `profiles` e policies
+-- Execute no SQL Editor do Supabase **após** fazer backup do banco (Export > SQL dump).
+-- Este script tenta criar a tabela se não existir e acrescentar colunas sem remover nada.
+
+-- 1) Cria tabela `profiles` caso não exista (não sobrescreve)
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  nome_completo text,
+  matricula text,
+  foto_url text,
+  role text default 'operator' check (role in ('operator','admin')),
+  created_at timestamptz default now()
+);
+
+-- 2) Adiciona colunas extras se estiverem faltando (ex.: foto_url, role)
+alter table public.profiles
+  add column if not exists foto_url text,
+  add column if not exists role text default 'operator',
+  add column if not exists created_at timestamptz default now();
+
+-- 3) Garante RLS habilitado (no Postgres não há IF NOT EXISTS para ENABLE RLS,
+-- mas isso é idempotente: habilitar se já estiver habilitado não altera).
+alter table public.profiles enable row level security;
+
+-- 4) Cria policies básicas somente se ainda não existirem.
+-- PostgreSQL não tem CREATE POLICY IF NOT EXISTS em versões mais antigas,
+-- portanto usamos DO blocks para verificar antes de criar.
+
+-- Allow insert by authenticated users but only as operator (prevenção de elevação de privilégio)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p WHERE p.policyname = 'allow_insert_authenticated'
+  ) THEN
+    CREATE POLICY allow_insert_authenticated ON public.profiles
+      FOR INSERT USING (auth.role() = 'authenticated')
+      WITH CHECK (auth.role() = 'authenticated' AND (role = 'operator' OR role IS NULL));
+  END IF;
+END$$;
+
+-- Allow users to select/update their own profile
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p WHERE p.policyname = 'users_can_select_own_profile'
+  ) THEN
+    CREATE POLICY users_can_select_own_profile ON public.profiles
+      FOR SELECT USING (auth.role() = 'authenticated' AND id = auth.uid());
+  END IF;
+END$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p WHERE p.policyname = 'users_can_update_own_profile'
+  ) THEN
+    CREATE POLICY users_can_update_own_profile ON public.profiles
+      FOR UPDATE USING (auth.role() = 'authenticated' AND id = auth.uid());
+  END IF;
+END$$;
+
+-- 5) Index simples (id já é PK). Adiciona índice na matrícula se necessário.
+create index if not exists idx_profiles_matricula on public.profiles (matricula);
+
+-- 6) Observações: este script é conservador e não remove colunas/policies.
+-- Antes de executar, faça backup completo do projeto Supabase (Project > Settings > Database > Backups).
+
+-- 7) Se detectar triggers/funções que causam recursão (erro 42P17), investigue com:
+-- SELECT t.tgname, pg_get_triggerdef(t.oid) AS definition
+-- FROM pg_trigger t
+-- JOIN pg_class c ON t.tgrelid = c.oid
+-- WHERE c.relname = 'profiles';
+
+-- Também verifique funções que referenciam 'profiles':
+-- SELECT proname, pg_get_functiondef(p.oid) AS source
+-- FROM pg_proc p
+-- WHERE pg_get_functiondef(p.oid) ILIKE '%profiles%';
+
+-- Cole os resultados acima e eu ajudo a revisar as funções/triggers para remover recursão.
+
+```
+
+## 5. COMPONENTES
+
+## 6. PAGES
+
+## 7. PACKAGE.JSON
+```json
+{
+  "name": "cco-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.93.3",
+    "leaflet": "^1.9.4",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^10.0.1",
+    "eslint-config-next": "^0.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+```
