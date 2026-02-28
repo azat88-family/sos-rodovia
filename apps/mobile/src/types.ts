@@ -3,8 +3,9 @@ export type UserRole = 'driver' | 'operator' | 'admin';
 export type UserProfile = {
   id: string;
   role: UserRole;
-  full_name: string | null;
-  phone: string | null;
+  nome_completo: string | null;
+  telefone: string | null;
+  matricula?: string | null;
 };
 
 export type IncidentStatus = 'open' | 'assigned' | 'en_route' | 'resolved' | 'cancelled';

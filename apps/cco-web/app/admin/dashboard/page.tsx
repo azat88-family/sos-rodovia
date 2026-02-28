@@ -48,7 +48,7 @@ export default function AdminDashboard() {
           .eq('id', user.id)
           .single();
 
-        if (profile?.role !== 'administrador') {
+        if (profile?.role !== 'admin' && profile?.role !== 'administrador') {
           router.replace('/');
           return;
         }
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('id, nome_completo, matricula, email, foto_url, ativo')
-          .eq('role', 'operador');
+          .eq('role', 'operator');
 
         if (fetchError) {
           setError('Erro ao carregar operadores. Verifique as permissões.');

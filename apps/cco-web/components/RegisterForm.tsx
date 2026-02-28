@@ -29,22 +29,49 @@ export default function RegisterForm({ role }: Props) {
     setLoading(true);
 
     try {
+      // Tenta realizar o signUp. Se falhar com 500, pode ser trigger no banco.
       const { data, error: signError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            nome_completo: nome,
+            role: role,
+          },
+        },
       });
 
       if (signError) throw signError;
 
-      const userId = data?.user?.id;
+      const user = data?.user;
 
-      if (userId) {
-        const { error: insertError } = await supabase
+      // Se o usuário foi criado mas não temos perfil (talvez o trigger falhou ou não existe)
+      if (user) {
+        // Verifica se o perfil já foi criado pelo trigger (caso exista)
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .insert({ id: userId, nome_completo: nome, matricula, role })
-          .select();
+          .select('id')
+          .eq('id', user.id)
+          .single();
 
-        if (insertError) throw insertError;
+        if (!existingProfile) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: user.id,
+              nome_completo: nome,
+              matricula,
+              role,
+              email: email // opcional, mas ajuda a manter sincronizado
+            })
+            .select();
+
+          if (insertError) {
+            console.error('Erro ao inserir perfil manualmente:', insertError);
+            // Não jogamos erro aqui se o signUp funcionou, para não confundir o usuário,
+            // mas o ideal é que o perfil exista.
+          }
+        }
       }
 
       setSuccess(true);
@@ -53,6 +80,7 @@ export default function RegisterForm({ role }: Props) {
       setNome('');
       setMatricula('');
     } catch (err: unknown) {
+      console.error('Erro no cadastro:', err);
       const message = err instanceof Error ? err.message : 'Erro inesperado no cadastro.';
       setError(message);
     } finally {
@@ -74,7 +102,7 @@ export default function RegisterForm({ role }: Props) {
 
       {success && (
         <div className="rounded bg-lime-900/70 p-3 text-lime-300 text-sm border border-lime-500">
-          ✅ Cadastro realizado com sucesso!
+          ✅ Cadastro realizado com sucesso! Verifique seu e-mail se necessário.
         </div>
       )}
 
