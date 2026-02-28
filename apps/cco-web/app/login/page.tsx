@@ -25,8 +25,10 @@ export default function LoginPage() {
     }
 
     const role = data.user?.user_metadata?.role;
-    if (role === 'administrador') {
+    if (role === 'administrador' || role === 'admin') {
       router.replace('/admin/dashboard');
+    } else if (role === 'driver') {
+      router.replace('/register/motorista'); // Or appropriate driver home if exists
     } else {
       router.replace('/cco/dashboard');
     }

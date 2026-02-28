@@ -1,7 +1,7 @@
 import Header from '@/components/landing/Header';
 import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeatureSection';
-import HowItWorkSection from '@/components/landing/HowItWorksSection';
+import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import CTASection from '@/components/landing/CTASection';
 import Footer from '@/components/landing/Footer';
 
@@ -11,7 +11,7 @@ export default function LandingPage() {
       <Header />
       <HeroSection />
       <FeaturesSection />
-      <HowItWorkSection />
+      <HowItWorksSection />
       <CTASection />
       <Footer />
     </main>
