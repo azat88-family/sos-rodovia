@@ -24,11 +24,18 @@ export default function LoginPage() {
       return;
     }
 
-    const role = data.user?.user_metadata?.role;
-    if (role === 'administrador' || role === 'admin') {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    const role = profile?.role || data.user?.user_metadata?.role;
+
+    if (role === 'admin' || role === 'administrador') {
       router.replace('/admin/dashboard');
     } else if (role === 'driver') {
-      router.replace('/register/motorista'); // Or appropriate driver home if exists
+      router.replace('/');
     } else {
       router.replace('/cco/dashboard');
     }

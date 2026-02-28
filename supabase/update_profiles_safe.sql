@@ -8,7 +8,7 @@ create table if not exists public.profiles (
   nome_completo text,
   matricula text,
   foto_url text,
-  role text default 'operator' check (role in ('operator','admin')),
+  role text default 'operator' check (role in ('operator','admin', 'driver')),
   created_at timestamptz default now()
 );
 
@@ -16,7 +16,17 @@ create table if not exists public.profiles (
 alter table public.profiles
   add column if not exists foto_url text,
   add column if not exists role text default 'operator',
-  add column if not exists created_at timestamptz default now();
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists cpf text,
+  add column if not exists celular text,
+  add column if not exists data_nascimento date,
+  add column if not exists gender text,
+  add column if not exists email text,
+  add column if not exists cnh_number text,
+  add column if not exists cnh_category text,
+  add column if not exists cnh_expiry date,
+  add column if not exists cnh_photo_url text,
+  add column if not exists ativo boolean default true;
 
 -- 3) Garante RLS habilitado (no Postgres não há IF NOT EXISTS para ENABLE RLS,
 -- mas isso é idempotente: habilitar se já estiver habilitado não altera).
@@ -34,7 +44,7 @@ BEGIN
   ) THEN
     CREATE POLICY allow_insert_authenticated ON public.profiles
       FOR INSERT USING (auth.role() = 'authenticated')
-      WITH CHECK (auth.role() = 'authenticated' AND (role = 'operator' OR role IS NULL));
+      WITH CHECK (auth.role() = 'authenticated' AND (role IN ('operator', 'driver') OR role IS NULL));
   END IF;
 END$$;
 
