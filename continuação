@@ -1,476 +1,249 @@
-📋 SOS Rodovia — Documento de Contexto do Projeto
-Gerado em: 26/02/2026 Autor: Alexandre Assistente: Claude Sonnet 4.6
+# SOS Rodovia (Monorepo)
 
-🎯 Objetivo do Projeto
-Monorepo de atendimento a motoristas com problemas em estradas, composto por:
+## Apps
+- apps/mobile (Expo React Native) - app único (driver/operator)
+- apps/cco-web (Next.js) - painel CCO
 
-cco-web → Dashboard Next.js para operadores/admin (CCO = Centro de Controle Operacional)
-mobile → App Expo React Native para motoristas e operadores de campo
-👥 Roles do Sistema
+## Setup
+Crie:
+- apps/mobile/.env
+- apps/cco-web/.env.local
 
+---
 
-Role	Acesso	App
-driver	Aperta botão SOS → avisa central mais próxima	Mobile
-operator	Recebe alertas, abre chamados, atende motoristas	CCO Web
-admin	Gestão total do sistema	CCO Web
-🔑 Credenciais & Variáveis de Ambiente
-Supabase
+# 🏗️ SOS-Rodovias — Arquitetura do Sistema
 
+> **Versão atual: 1.0** | Stack: Next.js + Expo + Supabase
 
-Projeto:        SOS Rodovia
-Dashboard:      https://supabase.com/dashboard/project/wfhqjswnpuvgnhrjrnom
-URL:            https://wfhqjswnpuvgnhrjrnom.supabase.co
-ANON KEY:       eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmaHFqc3ducHV2Z25ocmpybm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjk2ODAsImV4cCI6MjA4NTY0NTY4MH0.jJ82i0JgqeADvIRk1XB6rdrPm02L6rjBc5FQX-3rPuA
-ACCESS TOKEN:   sbp_858d032de067436093aa703ab6ce45c5dc5cb77e
-apps/cco-web/.env.local
-env
+---
 
+## 📁 Estrutura Real do Projeto
 
-NEXT_PUBLIC_SUPABASE_URL=https://wfhqjswnpuvgnhrjrnom.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmaHFqc3ducHV2Z25ocmpybm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjk2ODAsImV4cCI6MjA4NTY0NTY4MH0.jJ82i0JgqeADvIRk1XB6rdrPm02L6rjBc5FQX-3rPuA
-RESEND_API_KEY=re_COLOCAR_SUA_KEY_AQUI
-apps/mobile/.env
-env
-
-
-EXPO_PUBLIC_SUPABASE_URL=https://wfhqjswnpuvgnhrjrnom.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmaHFqc3ducHV2Z25ocmpybm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjk2ODAsImV4cCI6MjA4NTY0NTY4MH0.jJ82i0JgqeADvIRk1XB6rdrPm02L6rjBc5FQX-3rPuA
-🐙 GitHub
-
-
-Repositório:   https://github.com/azat88-family/sos-rodovia
-Branch:        master
-Codespace:     /workspaces/sos-rodovia
-🗂️ Estrutura do Monorepo
-
-
+```
 sos-rodovia/
+│
 ├── apps/
-│   ├── cco-web/                          Next.js 14 (App Router)
-│   │   ├── app/
-│   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx                  (landing page completa)
-│   │   │   ├── login/page.tsx
-│   │   │   ├── cco/
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── dashboard/page.tsx    (dashboard operador ← IMPLEMENTAR)
-│   │   │   ├── admin/dashboard/page.tsx
-│   │   │   └── register/
-│   │   │       ├── admin/page.tsx
-│   │   │       ├── operator/page.tsx
-│   │   │       └── motorista/page.tsx    (5 steps ✅ salvando no Supabase)
-│   │   ├── components/
-│   │   │   ├── OperatorCard.tsx
-│   │   │   ├── RegisterForm.tsx
-│   │   │   └── landing/                  (✅ completo)
-│   │   ├── hooks/
-│   │   │   ├── useAuth.ts
-│   │   │   └── useIncidents.ts           (← conectar ao dashboard)
-│   │   ├── middleware.ts
-│   │   └── supabase/
-│   │       ├── config.toml
-│   │       └── functions/send-email/
-│   │           ├── index.ts              (Edge Function Deno ← fazer deploy)
-│   │           ├── deno.json
-│   │           └── .npmrc
 │   │
-│   └── mobile/                           Expo SDK + Expo Router
+│   ├── cco-web/                              # ✅ Painel Web (Next.js)
+│   │   ├── app/
+│   │   │   ├── page.tsx                      # ✅ Landing Page — 🔴 28/02/2026
+│   │   │   ├── layout.tsx                    # ✅ Layout global
+│   │   │   ├── globals.css                   # ✅ Estilos globais
+│   │   │   ├── admin/
+│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Admin
+│   │   │   ├── cco/
+│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Operador CCO
+│   │   │   └── register/
+│   │   │       ├── admin/page.tsx            # ✅ Cadastro Admin
+│   │   │       ├── operator/page.tsx         # ✅ Cadastro Operador
+│   │   │       └── motorista/page.tsx        # ✅ Cadastro Motorista (5 steps) — 🔴 24/02/2026
+│   │   │
+│   │   ├── components/
+│   │   │   ├── IncidentsMap.tsx              # ✅ Mapa de Incidentes
+│   │   │   ├── OperatorCard.tsx              # ✅ Card do Operador
+│   │   │   ├── ProfilePhotoCapture.tsx       # ✅ Captura de Foto
+│   │   │   ├── RegisterForm.tsx              # ✅ Formulário de Cadastro — 🔴 28/02/2026
+│   │   │   ├── landing/
+│   │   │   │   ├── Header.tsx                # ✅ Cabeçalho Landing
+│   │   │   │   ├── HeroSection.tsx           # ✅ Seção Hero
+│   │   │   │   ├── FeaturesSection.tsx       # ✅ Seção Features
+│   │   │   │   ├── HowItWorkSection.tsx      # ✅ Como Funciona
+│   │   │   │   ├── CTASection.tsx            # ✅ Call to Action
+│   │   │   │   └── Footer.tsx                # ✅ Rodapé
+│   │   │   └── register/
+│   │   │       └── motorista/
+│   │   │           ├── Step1DadosPessoais.tsx  # ✅ Step 1 — 🔴 24/02/2026
+│   │   │           ├── Step2Veiculo.tsx        # ✅ Step 2 — 🔴 24/02/2026
+│   │   │           ├── Step3Endereco.tsx       # ✅ Step 3 — 🔴 24/02/2026
+│   │   │           ├── Step4Emergencia.tsx     # ✅ Step 4 — 🔴 24/02/2026
+│   │   │           ├── Step5Documentos.tsx     # ✅ Step 5 — 🔴 24/02/2026
+│   │   │           └── styles.ts               # ✅ Estilos Steps — 🔴 24/02/2026
+│   │   │
+│   │   ├── lib/
+│   │   │   ├── supabase.ts                   # ✅ Client Supabase
+│   │   │   └── incidents.ts                  # ✅ Funções de Incidentes
+│   │   │
+│   │   ├── public/
+│   │   │   ├── login.png                     # ✅ Imagem login
+│   │   │   └── fundo login.png               # ✅ Fundo login
+│   │   │
+│   │   └── types.ts                          # ✅ Types globais
+│   │
+│   └── mobile/                               # ✅ App Mobile (Expo)
+│       ├── src/
+│       │   ├── screens/
+│       │   │   ├── LoginScreen.tsx           # ✅ Login Motorista/Operador
+│       │   │   ├── DriverHomeScreen.tsx      # ✅ Home do Motorista
+│       │   │   ├── OperatorHomeScreen.tsx    # ✅ Home do Operador
+│       │   │   └── NewIncidentScreen.tsx     # ✅ Novo Incidente/SOS
+│       │   ├── lib/
+│       │   │   └── supabase.ts               # ✅ Client Supabase Mobile
+│       │   └── types.ts                      # ✅ Types Mobile — 🔴 28/02/2026
+│       │
 │       ├── app/
-│       │   ├── _layout.tsx               (auth guard + redirect por role)
-│       │   ├── login.tsx
-│       │   ├── driver/
-│       │   │   ├── index.tsx             (BOTÃO SOS VERMELHO ← implementar)
-│       │   │   └── new-incident.tsx      (envia GPS + dados para Supabase)
-│       │   └── operator/
-│       │       └── index.tsx
-│       └── assets/images/
-│           └── fundo login.png
-└── supabase/
-    ├── init.sql                          (✅ rodado)
-    ├── funcionarios.sql                  (✅ rodado)
-    └── update_profiles_safe.sql          (✅ rodado)
-🗄️ Banco de Dados (Supabase)
-Tabelas existentes (✅ já rodadas)
-sql
-
-
-profiles       (id, email, role, nome, created_at)
-funcionarios   (id, nome, cpf, cargo, telefone, ...)
-⚠️ PENDENTE — rodar no Supabase SQL Editor
-sql
-
-
--- 1. Tabela de incidents (chamados SOS)
-CREATE TABLE incidents (
-  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  driver_id   uuid REFERENCES profiles(id),
-  operator_id uuid REFERENCES profiles(id),
-  status      text DEFAULT 'open'
-                CHECK (status IN ('open','in_progress','closed')),
-  latitude    float NOT NULL,
-  longitude   float NOT NULL,
-  created_at  timestamptz DEFAULT now(),
-  updated_at  timestamptz DEFAULT now()
-);
-
--- 2. Habilitar Realtime na tabela incidents
-ALTER TABLE incidents REPLICA IDENTITY FULL;
-
--- 3. RLS - motorista só vê seus próprios chamados
-ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "driver sees own incidents"
-  ON incidents FOR SELECT
-  USING (driver_id = auth.uid());
-
-CREATE POLICY "driver creates incident"
-  ON incidents FOR INSERT
-  WITH CHECK (driver_id = auth.uid());
-
--- 4. Operador vê todos os incidents abertos
-CREATE POLICY "operator sees all incidents"
-  ON incidents FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-      AND role IN ('operator','admin')
-    )
-  );
-
-CREATE POLICY "operator updates incident"
-  ON incidents FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-      AND role IN ('operator','admin')
-    )
-  );
-📱 Mobile — Como Rodar (Expo Go)
-Primeira vez — setup
-bash
-
-
-# No terminal do Codespace
-cd apps/mobile
-npm install
-
-# Instalar Expo CLI globalmente
-npm install -g expo-cli
-Rodar o app
-bash
-
-
-cd apps/mobile
-npx expo start
-Vai aparecer um QR Code no terminal. No celular, abre o app Expo Go (baixar na Play Store / App Store) e escaneia o QR.
-
-⚠️ Atenção
-O Codespace precisa ter a porta 8081 pública (verificar em Ports no VS Code)
-O celular e o computador precisam estar na mesma rede Wi-Fi OU usar Expo Tunnel:
-bash
-
-
-npx expo start --tunnel
-📱 Mobile — Próximo Passo: Botão SOS
-apps/mobile/app/driver/index.tsx
-tsx
-
-
-import { useState } from 'react'
-import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native'
-import * as Location from 'expo-location'
-import { supabase } from '@/lib/supabase'
-
-export default function DriverHome() {
-  const [loading, setLoading] = useState(false)
-
-  async function handleSOS() {
-    setLoading(true)
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Precisamos da sua localização para enviar socorro.')
-        return
-      }
-
-      const location = await Location.getCurrentPositionAsync({})
-      const { data: { user } } = await supabase.auth.getUser()
-
-      const { error } = await supabase.from('incidents').insert({
-        driver_id: user?.id,
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        status: 'open',
-      })
-
-      if (error) throw error
-
-      Alert.alert('✅ Socorro enviado!', 'A central foi notificada. Aguarde o apoio.')
-    } catch (err) {
-      Alert.alert('Erro', 'Não foi possível enviar o socorro. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Precisa de ajuda?</Text>
-      <TouchableOpacity
-        style={[styles.sosButton, loading && styles.sosButtonDisabled]}
-        onPress={handleSOS}
-        disabled={loading}
-      >
-        <Text style={styles.sosText}>{loading ? 'ENVIANDO...' : 'SOS'}</Text>
-      </TouchableOpacity>
-      <Text style={styles.subtitle}>
-        Pressione o botão para alertar a central mais próxima
-      </Text>
-    </View>
-  )
-}
-
-const styles = StyleSheet.create({
-  container:          { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' },
-  title:              { color: '#fff', fontSize: 24, fontWeight: 'bold', marginBottom: 48 },
-  sosButton:          { width: 200, height: 200, borderRadius: 100, backgroundColor: '#ef4444',
-                        justifyContent: 'center', alignItems: 'center',
-                        shadowColor: '#ef4444', shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.8, shadowRadius: 30, elevation: 20 },
-  sosButtonDisabled:  { backgroundColor: '#7f1d1d' },
-  sosText:            { color: '#fff', fontSize: 48, fontWeight: 'bold' },
-  subtitle:           { color: '#94a3b8', fontSize: 14, marginTop: 32, textAlign: 'center', paddingHorizontal: 40 },
-})
-Dependência necessária
-bash
-
-
-cd apps/mobile
-npx expo install expo-location
-🖥️ CCO Web — Dashboard Operador
-Funcionalidades a implementar em app/cco/dashboard/page.tsx
-Lista de chamados em tempo real via supabase.channel()
-Botão piscando quando chega novo chamado com status open
-Ao clicar → abre modal/drawer com dados do motorista
-Picture-in-Picture → dashboard fica em 30% da tela enquanto vê o chamado
-apps/cco-web/app/cco/dashboard/page.tsx
-tsx
-
-
-'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-
-type Incident = {
-  id: string
-  status: string
-  latitude: number
-  longitude: number
-  created_at: string
-  driver: {
-    nome: string
-    email: string
-    telefone?: string
-  }
-}
-
-export default function CCODashboard() {
-  const [incidents, setIncidents] = useState<Incident[]>([])
-  const [selected, setSelected] = useState<Incident | null>(null)
-  const [hasNew, setHasNew] = useState(false)
-
-  useEffect(() => {
-    // Busca inicial
-    supabase
-      .from('incidents')
-      .select('*, driver:profiles!driver_id(nome, email)')
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setIncidents(data ?? []))
-
-    // Realtime — escuta novos chamados
-    const channel = supabase
-      .channel('incidents-realtime')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'incidents',
-      }, (payload) => {
-        setIncidents(prev => [payload.new as Incident, ...prev])
-        setHasNew(true)
-      })
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [])
-
-  return (
-    <div className="flex h-screen bg-slate-900 text-white">
-
-      {/* PAINEL ESQUERDO — lista chamados */}
-      <div className={`${selected ? 'w-[30%]' : 'w-full'} transition-all border-r border-slate-700 overflow-y-auto`}>
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Central de Operações</h1>
-          {hasNew && (
-            <span className="animate-pulse bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-              NOVO CHAMADO
-            </span>
-          )}
-        </div>
-
-        <div className="p-4 space-y-3">
-          {incidents.map(incident => (
-            <button
-              key={incident.id}
-              onClick={() => { setSelected(incident); setHasNew(false) }}
-              className={`w-full text-left p-4 rounded-xl border transition-all
-                ${incident.status === 'open'
-                  ? 'border-red-500 bg-red-500/10 animate-pulse hover:animate-none hover:bg-red-500/20'
-                  : 'border-slate-600 bg-slate-800 hover:bg-slate-700'
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${incident.status === 'open' ? 'bg-red-500' : 'bg-yellow-400'}`} />
-                <span className="font-semibold">{incident.driver?.nome ?? 'Motorista'}</span>
-              </div>
-              <p className="text-slate-400 text-sm mt-1">
-                {new Date(incident.created_at).toLocaleTimeString('pt-BR')}
-              </p>
-            </button>
-          ))}
-
-          {incidents.length === 0 && (
-            <p className="text-slate-500 text-center mt-12">Nenhum chamado aberto</p>
-          )}
-        </div>
-      </div>
-
-      {/* PAINEL DIREITO — detalhes do chamado (Picture-in-Picture) */}
-      {selected && (
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">🚨 Chamado em Atendimento</h2>
-            <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-white text-2xl">✕</button>
-          </div>
-
-          {/* Dados do motorista */}
-          <div className="bg-slate-800 rounded-2xl p-6 mb-4 space-y-3">
-            <h3 className="text-lg font-semibold text-red-400">👤 Dados do Motorista</h3>
-            <p><span className="text-slate-400">Nome:</span> {selected.driver?.nome}</p>
-            <p><span className="text-slate-400">Email:</span> {selected.driver?.email}</p>
-            <p><span className="text-slate-400">Localização:</span> {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}</p>
-            <p><span className="text-slate-400">Chamado em:</span> {new Date(selected.created_at).toLocaleString('pt-BR')}</p>
-          </div>
-
-          {/* Mapa (iframe Google Maps) */}
-          <div className="rounded-2xl overflow-hidden mb-4">
-            <iframe
-              width="100%"
-              height="300"
-              style={{ border: 0 }}
-              src={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}&z=15&output=embed`}
-            />
-          </div>
-
-          {/* Ações */}
-          <div className="flex gap-3">
-            <button
-              onClick={async () => {
-                await supabase.from('incidents').update({ status: 'in_progress' }).eq('id', selected.id)
-                setSelected(prev => prev ? { ...prev, status: 'in_progress' } : null)
-              }}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-xl"
-            >
-              ▶ Iniciar Atendimento
-            </button>
-            <button
-              onClick={async () => {
-                await supabase.from('incidents').update({ status: 'closed' }).eq('id', selected.id)
-                setIncidents(prev => prev.filter(i => i.id !== selected.id))
-                setSelected(null)
-              }}
-              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl"
-            >
-              ✅ Encerrar Chamado
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-📧 Edge Function — Send Email (Resend)
-Adicionar a API Key do Resend no .env.local
-env
-
-
-RESEND_API_KEY=re_SUA_KEY_AQUI
-Deploy da Edge Function
-bash
-
-
-cd apps/cco-web
-
-# Login no Supabase CLI
-npx supabase login
-# Cola o ACCESS TOKEN: sbp_858d032de067436093aa703ab6ce45c5dc5cb77e
-
-# Link com o projeto
-npx supabase link --project-ref wfhqjswnpuvgnhrjrnom
-
-# Deploy da função
-npx supabase functions deploy send-email
-Setar a variável de ambiente na Edge Function
-bash
-
-
-npx supabase secrets set RESEND_API_KEY=re_SUA_KEY_AQUI
-🚀 Checklist — Ordem de Execução
-
-
-SESSÃO 1 — Banco de Dados
-[ ] 1. Abrir Supabase SQL Editor
-[ ] 2. Rodar o SQL da tabela incidents (acima)
-[ ] 3. Verificar se tabela aparece no Table Editor
-
-SESSÃO 2 — Mobile
-[ ] 4. cd apps/mobile && npm install
-[ ] 5. npx expo install expo-location
-[ ] 6. npx expo start --tunnel
-[ ] 7. Escanear QR no Expo Go
-[ ] 8. Testar login com usuário driver
-[ ] 9. Substituir driver/index.tsx pelo código do botão SOS acima
-[ ] 10. Testar botão SOS → verificar se cria registro no Supabase
-
-SESSÃO 3 — CCO Web Dashboard
-[ ] 11. Substituir app/cco/dashboard/page.tsx pelo código acima
-[ ] 12. Rodar: cd apps/cco-web && npm run dev
-[ ] 13. Logar como operator e testar o dashboard
-[ ] 14. Verificar se alerta pisca ao criar SOS no mobile
-
-SESSÃO 4 — Email
-[ ] 15. Adicionar RESEND_API_KEY no .env.local
-[ ] 16. Fazer deploy da Edge Function send-email
-[ ] 17. Testar envio de e-mail ao abrir novo chamado
-💡 Decisões Técnicas Tomadas
-
-
-Decisão	Motivo
-Expo Router (file-based)	Navegação por role mais limpa
-Auth guard no _layout.tsx	Protege todas as rotas filhas
-Redirect por role no login	driver → /driver, operator → /operator
-middleware.ts no Next.js	Protege rotas CCO web
-Realtime via supabase.channel()	Sem polling, instantâneo
-Picture-in-Picture com Tailwind flex	Painel esquerdo 30% ao selecionar chamado
-GPS via expo-location	Captura coordenadas reais do motorista
-Monorepo sem Turborepo	Simplicidade, projeto pequeno
-⚠️ ATENÇÃO: Este documento contém credenciais reais. NÃO commitar no GitHub. Guardar localmente ou em gerenciador de senhas (Bitwarden, 1Password, Notion privado, etc.)
-
-Agora salva isso Alexandre! Vai no site md2pdf.netlify.app, cola tudo e baixa o PDF. 🎯
-w
-Na próxima sessão é só começar pela Sessão 1 do Checklist e o código já está pronto pra colar! 💪
-
-
-
+│       │   ├── (tabs)/
+│       │   │   ├── index.tsx                 # ✅ Tab Home
+│       │   │   └── explore.tsx               # ✅ Tab Explorar
+│       │   ├── _layout.tsx                   # ✅ Layout Root — 🔴 28/02/2026
+│       │   └── modal.tsx                     # ✅ Modal
+│       │
+│       └── constants/
+│           └── theme.ts                      # ✅ Tema/Cores
+│
+├── supabase/
+│   ├── init.sql                              # ✅ Schema inicial
+│   ├── funcionarios.sql                      # ✅ Tabela funcionários
+│   ├── update_profiles_safe.sql              # ✅ Migração segura profiles — 🔴 28/02/2026
+│   └── drivers.sql                           # 🔧 Tabela drivers/veículos/endereços — 🔴 24/02/2026
+│
+└── package.json                              # ✅ Monorepo root
+```
+
+---
+
+## 🗺️ Roadmap de Versões
+
+### 🟢 Versão 1.0 — atual (MVP)
+> Base funcional do sistema com cadastro, login e painel CCO
+
+- ✅ Landing Page completa
+- ✅ Cadastro de Operador e Admin (Web)
+- ✅ Dashboard CCO e Admin (Web)
+- ✅ Mapa de Incidentes (Web)
+- ✅ Telas Mobile: Login, Home Motorista, Home Operador, Novo Incidente
+- ✅ Integração Supabase (Auth + Database)
+- ✅ Schema SQL base
+
+---
+
+### 🟡 Versão 1.1 — próxima entrega
+> Correções e páginas faltantes identificadas
+
+- ✅ `app/register/motorista/page.tsx` — Cadastro de Motorista Web (5 steps) — 🔴 24/02/2026
+- 🔧 Salvar dados do Motorista no Supabase (drivers, vehicles, addresses, emergency_contacts) — 🔴 24/02/2026
+- ✅ `app/login/page.tsx` — Tela de login Web — 🔴 28/02/2026
+- ✅ Corrigir `Page.tsx` fora do lugar (`apps/cco-web/Page.tsx`) — 🔴 28/02/2026
+- ✅ Conectar navegação real no `App.tsx` Mobile — 🔴 28/02/2026
+- ✅ Conectar `app/(tabs)` com `src/screens/` — 🔴 28/02/2026
+
+---
+
+### 🔵 Versão 2.0 — Chat em Tempo Real
+> Comunicação direta entre Motorista e Operador CCO
+
+- ( Chat Realtime via Supabase Realtime )
+- ( Componente `ChatPanel.tsx` no Dashboard CCO )
+- ( Tela `ChatScreen.tsx` no Mobile )
+- ( Mensagens de texto e sistema )
+- ( Indicador de digitando / lido )
+- ( Histórico de mensagens por incidente )
+
+---
+
+### 🟠 Versão 2.1 — GPS & Rastreamento
+> Localização em tempo real do motorista
+
+- ( Rastreamento GPS contínuo no Mobile )
+- ( Envio de coordenadas ao Supabase em tempo real )
+- ( Mapa atualizado ao vivo no Painel CCO )
+- ( Componente `LocationTracker.tsx` )
+- ( Tabela `locations` no banco de dados )
+- ( Histórico de trajeto por incidente )
+
+---
+
+### 🔴 Versão 2.2 — Inteligência Artificial
+> Resumo e classificação automática de incidentes via IA
+
+- ( Edge Function: `ai-summary` com GPT-4o )
+- ( Resumo automático ao criar chamado )
+- ( Classificação do tipo de incidente pela IA )
+- ( Sugestão de prioridade automática )
+- ( Componente `AISummaryCard.tsx` no Dashboard )
+
+---
+
+### 🟣 Versão 2.3 — Áudio & Transcrição
+> Comunicação por voz e transcrição automática
+
+- ( Gravação de áudio no Mobile )
+- ( Upload do áudio para Supabase Storage )
+- ( Edge Function: `transcribe-audio` com Whisper )
+- ( Exibição da transcrição no Chat CCO )
+- ( Componente `VoiceRecorder.tsx` no Mobile )
+
+---
+
+### ⚫ Versão 3.0 — Despacho & Integrações
+> Integração com guincho, ambulância e serviços externos
+
+- ( Edge Function: `dispatch-rescue` )
+- ( Integração com API de guinchos parceiros )
+- ( Notificações Push (Expo Notifications) )
+- ( Painel de status de despacho )
+- ( Relatórios e métricas de atendimento )
+- ( App Admin Mobile )
+
+---
+
+## 🔄 Fluxo do Sistema (v1.0 atual)
+
+```
+MOTORISTA (App Mobile)
+        │
+        │ 1. Login / Cadastro
+        │ 2. Aciona Novo Incidente
+        ▼
+SUPABASE
+        │
+        ├─── Salva incidente no DB
+        └─── Notifica via Realtime
+                │
+                ▼
+OPERADOR (Painel CCO Web)
+        │
+        └─── Visualiza incidente no mapa e dashboard
+```
+
+---
+
+## 🗄️ Banco de Dados (atual)
+
+```sql
+-- Já existente em supabase/
+profiles / funcionarios                                        ✅
+incidents (via incidents.ts)                                   ✅
+
+-- (v1.1) drivers / vehicles / addresses / emergency_contacts  🔴 24/02/2026
+-- (v2.1) locations                                            🔵
+-- (v2.2) ai_summaries                                         🔴
+-- (v2.3) audio_messages                                       🟣
+```
+
+---
+
+## 🔐 Autenticação
+
+| Perfil     | Plataforma | Status                   |
+|------------|------------|--------------------------|
+| Admin      | Web        | ✅ v1.0                  |
+| Operador   | Web        | ✅ v1.0                  |
+| Motorista  | Mobile     | ✅ v1.0                  |
+| Motorista  | Web        | 🔧 v1.1 — 🔴 24/02/2026 |
+
+---
+
+## 🌐 Stack Tecnológico
+
+| Camada        | Tecnologia            | Status      |
+|---------------|-----------------------|-------------|
+| App Mobile    | React Native + Expo   | ✅ v1.0     |
+| Painel Web    | Next.js 14 + Tailwind | ✅ v1.0     |
+| Backend       | Supabase              | ✅ v1.0     |
+| Mapas Web     | Leaflet.js            | ✅ v1.0     |
+| Chat Realtime | Supabase Realtime     | 🔵 v2.0     |
+| Mapas Mobile  | React Native Maps     | 🟠 v2.1     |
+| IA Resumo     | OpenAI GPT-4o         | 🔴 v2.2     |
+| Transcrição   | OpenAI Whisper        | 🟣 v2.3     |
+| Deploy Web    | Vercel                | ⚫ v3.0     |
+| Deploy Mobile | Expo EAS              | ⚫ v3.0     |
