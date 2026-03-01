@@ -35,7 +35,7 @@ sos-rodovia/
 │   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Operador CCO
 │   │   │   └── register/
 │   │   │       ├── admin/page.tsx            # ✅ Cadastro Admin
-│   │   │       ├── operator/page.tsx         # ✅ Cadastro Operador
+│   │   │       ├── operator/page.tsx         # ✅ Cadastro Operador (Aprovação Admin) — 🔴 28/02/2026
 │   │   │       └── motorista/page.tsx        # ✅ Cadastro Motorista (5 steps) — 🔴 24/02/2026
 │   │   │
 │   │   ├── components/
@@ -107,7 +107,7 @@ sos-rodovia/
 > Base funcional do sistema com cadastro, login e painel CCO
 
 - ✅ Landing Page completa
-- ✅ Cadastro de Operador e Admin (Web)
+- ✅ Cadastro de Operador e Admin (Web) — 🔴 28/02/2026
 - ✅ Dashboard CCO e Admin (Web)
 - ✅ Mapa de Incidentes (Web)
 - ✅ Telas Mobile: Login, Home Motorista, Home Operador, Novo Incidente
@@ -121,10 +121,11 @@ sos-rodovia/
 
 - ✅ `app/register/motorista/page.tsx` — Cadastro de Motorista Web (5 steps) — 🔴 24/02/2026
 - 🔧 Salvar dados do Motorista no Supabase (drivers, vehicles, addresses, emergency_contacts) — 🔴 24/02/2026
-- ✅ `app/login/page.tsx` — Tela de login Web — 🔴 28/02/2026
+- ✅ `app/login/page.tsx` — Tela de login Web (Trava de Aprovação) — 🔴 28/02/2026
 - ✅ Corrigir `Page.tsx` fora do lugar (`apps/cco-web/Page.tsx`) — 🔴 28/02/2026
 - ✅ Conectar navegação real no `App.tsx` Mobile — 🔴 28/02/2026
 - ✅ Conectar `app/(tabs)` com `src/screens/` — 🔴 28/02/2026
+- ✅ Fluxo de Aprovação de Operadores (Admin Dashboard) — 🔴 28/02/2026
 
 ---
 
