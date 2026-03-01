@@ -26,11 +26,19 @@ export default function LoginPage() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, aprovado')
       .eq('id', data.user.id)
       .single();
 
     const role = profile?.role || data.user?.user_metadata?.role;
+    const isApproved = profile?.aprovado !== false; // Admins são true, novos operadores são false
+
+    if (!isApproved && role !== 'admin') {
+      setError('Sua conta está pendente de aprovação pelo administrador (Alexandre Santos).');
+      setLoading(false);
+      await supabase.auth.signOut();
+      return;
+    }
 
     if (role === 'admin' || role === 'administrador') {
       router.replace('/admin/dashboard');
