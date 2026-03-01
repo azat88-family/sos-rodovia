@@ -108,8 +108,8 @@ sos-rodovia/
 
 - ✅ Landing Page completa
 - ✅ Cadastro de Operador e Admin (Web) — 🔴 28/02/2026
-- ✅ Dashboard CCO e Admin (Web)
-- ✅ Mapa de Incidentes (Web)
+- ✅ Dashboard CCO e Admin (Web) — 🔴 28/02/2026
+- ✅ Mapa de Incidentes (Web) e Alerta SOS Detalhado — 🔴 28/02/2026
 - ✅ Telas Mobile: Login, Home Motorista, Home Operador, Novo Incidente
 - ✅ Integração Supabase (Auth + Database)
 - ✅ Schema SQL base
@@ -126,6 +126,7 @@ sos-rodovia/
 - ✅ Conectar navegação real no `App.tsx` Mobile — 🔴 28/02/2026
 - ✅ Conectar `app/(tabs)` com `src/screens/` — 🔴 28/02/2026
 - ✅ Fluxo de Aprovação de Operadores (Admin Dashboard) — 🔴 28/02/2026
+- ✅ Geolocalização em Tempo Real (Pin SOS Detalhado: Foto, CPF, Placa, Modelo, Cor) — 🔴 28/02/2026
 
 ---
 
