@@ -26,7 +26,7 @@ sos-rodovia/
 │   │
 │   ├── cco-web/                              # ✅ Painel Web (Next.js)
 │   │   ├── app/
-│   │   │   ├── page.tsx                      # ✅ Landing Page
+│   │   │   ├── page.tsx                      # ✅ Landing Page — 🔴 28/02/2026
 │   │   │   ├── layout.tsx                    # ✅ Layout global
 │   │   │   ├── globals.css                   # ✅ Estilos globais
 │   │   │   ├── admin/
@@ -42,7 +42,7 @@ sos-rodovia/
 │   │   │   ├── IncidentsMap.tsx              # ✅ Mapa de Incidentes
 │   │   │   ├── OperatorCard.tsx              # ✅ Card do Operador
 │   │   │   ├── ProfilePhotoCapture.tsx       # ✅ Captura de Foto
-│   │   │   ├── RegisterForm.tsx              # ✅ Formulário de Cadastro
+│   │   │   ├── RegisterForm.tsx              # ✅ Formulário de Cadastro — 🔴 28/02/2026
 │   │   │   ├── landing/
 │   │   │   │   ├── Header.tsx                # ✅ Cabeçalho Landing
 │   │   │   │   ├── HeroSection.tsx           # ✅ Seção Hero
@@ -78,13 +78,13 @@ sos-rodovia/
 │       │   │   └── NewIncidentScreen.tsx     # ✅ Novo Incidente/SOS
 │       │   ├── lib/
 │       │   │   └── supabase.ts               # ✅ Client Supabase Mobile
-│       │   └── types.ts                      # ✅ Types Mobile
+│       │   └── types.ts                      # ✅ Types Mobile — 🔴 28/02/2026
 │       │
 │       ├── app/
 │       │   ├── (tabs)/
 │       │   │   ├── index.tsx                 # ✅ Tab Home
 │       │   │   └── explore.tsx               # ✅ Tab Explorar
-│       │   ├── _layout.tsx                   # ✅ Layout Root
+│       │   ├── _layout.tsx                   # ✅ Layout Root — 🔴 28/02/2026
 │       │   └── modal.tsx                     # ✅ Modal
 │       │
 │       └── constants/
@@ -93,7 +93,7 @@ sos-rodovia/
 ├── supabase/
 │   ├── init.sql                              # ✅ Schema inicial
 │   ├── funcionarios.sql                      # ✅ Tabela funcionários
-│   ├── update_profiles_safe.sql              # ✅ Migração segura profiles
+│   ├── update_profiles_safe.sql              # ✅ Migração segura profiles — 🔴 28/02/2026
 │   └── drivers.sql                           # 🔧 Tabela drivers/veículos/endereços — 🔴 24/02/2026
 │
 └── package.json                              # ✅ Monorepo root
@@ -121,10 +121,10 @@ sos-rodovia/
 
 - ✅ `app/register/motorista/page.tsx` — Cadastro de Motorista Web (5 steps) — 🔴 24/02/2026
 - 🔧 Salvar dados do Motorista no Supabase (drivers, vehicles, addresses, emergency_contacts) — 🔴 24/02/2026
-- 🔧 `app/login/page.tsx` — Tela de login Web
-- 🔧 Corrigir `Page.tsx` fora do lugar (`apps/cco-web/Page.tsx`)
-- 🔧 Conectar navegação real no `App.tsx` Mobile
-- 🔧 Conectar `app/(tabs)` com `src/screens/`
+- ✅ `app/login/page.tsx` — Tela de login Web — 🔴 28/02/2026
+- ✅ Corrigir `Page.tsx` fora do lugar (`apps/cco-web/Page.tsx`) — 🔴 28/02/2026
+- ✅ Conectar navegação real no `App.tsx` Mobile — 🔴 28/02/2026
+- ✅ Conectar `app/(tabs)` com `src/screens/` — 🔴 28/02/2026
 
 ---
 
