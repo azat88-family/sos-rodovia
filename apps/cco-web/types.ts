@@ -20,9 +20,16 @@ export type Incident = {
   status: IncidentStatus;
   placa_veiculo: string;
   modelo_veiculo: string;
+  cor_veiculo?: string;
   telefone: string;
   nivel_urgencia: number;
   assigned_to?: string | null;
   assigned_at?: string | null;
   updated_at?: string | null;
+  driver?: {
+    nome_completo: string | null;
+    cpf: string | null;
+    foto_url: string | null;
+    email: string | null;
+  };
 };

@@ -20,6 +20,7 @@ export type IncidentInsert = {
   status: IncidentStatus;
   placa_veiculo: string;
   modelo_veiculo: string;
+  cor_veiculo?: string;
   telefone: string;
   nivel_urgencia: number; // 1..5
 };
