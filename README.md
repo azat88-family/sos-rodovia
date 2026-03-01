@@ -13,7 +13,7 @@ Crie:
 
 # 🏗️ SOS-Rodovias — Arquitetura do Sistema
 
-> **Versão atual: 1.0** | Stack: Next.js + Expo + Supabase
+> **Versão atual: 1.1** | Stack: Next.js + Expo + Supabase
 
 ---
 
@@ -30,9 +30,9 @@ sos-rodovia/
 │   │   │   ├── layout.tsx                    # ✅ Layout global
 │   │   │   ├── globals.css                   # ✅ Estilos globais
 │   │   │   ├── admin/
-│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Admin
+│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Admin (Aprovações) — 🔴 28/02/2026
 │   │   │   ├── cco/
-│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Operador CCO
+│   │   │   │   └── dashboard/page.tsx        # ✅ Dashboard Operador CCO (Alerta SOS) — 🔴 28/02/2026
 │   │   │   └── register/
 │   │   │       ├── admin/page.tsx            # ✅ Cadastro Admin
 │   │   │       ├── operator/page.tsx         # ✅ Cadastro Operador (Aprovação Admin) — 🔴 28/02/2026
@@ -51,13 +51,18 @@ sos-rodovia/
 │   │   │   │   ├── CTASection.tsx            # ✅ Call to Action
 │   │   │   │   └── Footer.tsx                # ✅ Rodapé
 │   │   │   └── register/
-│   │   │       └── motorista/
-│   │   │           ├── Step1DadosPessoais.tsx  # ✅ Step 1 — 🔴 24/02/2026
-│   │   │           ├── Step2Veiculo.tsx        # ✅ Step 2 — 🔴 24/02/2026
-│   │   │           ├── Step3Endereco.tsx       # ✅ Step 3 — 🔴 24/02/2026
-│   │   │           ├── Step4Emergencia.tsx     # ✅ Step 4 — 🔴 24/02/2026
-│   │   │           ├── Step5Documentos.tsx     # ✅ Step 5 — 🔴 24/02/2026
-│   │   │           └── styles.ts               # ✅ Estilos Steps — 🔴 24/02/2026
+│   │   │       ├── motorista/
+│   │   │       │   ├── Step1DadosPessoais.tsx  # ✅ Step 1 — 🔴 24/02/2026
+│   │   │       │   ├── Step2Veiculo.tsx        # ✅ Step 2 — 🔴 24/02/2026
+│   │   │       │   ├── Step3Endereco.tsx       # ✅ Step 3 — 🔴 24/02/2026
+│   │   │       │   ├── Step4Emergencia.tsx     # ✅ Step 4 — 🔴 24/02/2026
+│   │   │       │   ├── Step5Documentos.tsx     # ✅ Step 5 — 🔴 24/02/2026
+│   │   │       │   └── styles.ts               # ✅ Estilos Steps — 🔴 24/02/2026
+│   │   │       └── operator/
+│   │   │           ├── Step1DadosPessoais.tsx  # ✅ Step 1 Operador — 🔴 28/02/2026
+│   │   │           ├── Step2MatriculaFoto.tsx  # ✅ Step 2 Operador — 🔴 28/02/2026
+│   │   │           ├── Step3Endereco.tsx       # ✅ Step 3 Operador — 🔴 28/02/2026
+│   │   │           └── Step4Contato.tsx        # ✅ Step 4 Operador — 🔴 28/02/2026
 │   │   │
 │   │   ├── lib/
 │   │   │   ├── supabase.ts                   # ✅ Client Supabase
@@ -67,7 +72,7 @@ sos-rodovia/
 │   │   │   ├── login.png                     # ✅ Imagem login
 │   │   │   └── fundo login.png               # ✅ Fundo login
 │   │   │
-│   │   └── types.ts                          # ✅ Types globais
+│   │   └── types.ts                          # ✅ Types globais — 🔴 28/02/2026
 │   │
 │   └── mobile/                               # ✅ App Mobile (Expo)
 │       ├── src/
@@ -75,7 +80,7 @@ sos-rodovia/
 │       │   │   ├── LoginScreen.tsx           # ✅ Login Motorista/Operador
 │       │   │   ├── DriverHomeScreen.tsx      # ✅ Home do Motorista
 │       │   │   ├── OperatorHomeScreen.tsx    # ✅ Home do Operador
-│       │   │   └── NewIncidentScreen.tsx     # ✅ Novo Incidente/SOS
+│       │   │   └── NewIncidentScreen.tsx     # ✅ Novo Incidente/SOS — 🔴 28/02/2026
 │       │   ├── lib/
 │       │   │   └── supabase.ts               # ✅ Client Supabase Mobile
 │       │   └── types.ts                      # ✅ Types Mobile — 🔴 28/02/2026
@@ -94,6 +99,8 @@ sos-rodovia/
 │   ├── init.sql                              # ✅ Schema inicial
 │   ├── funcionarios.sql                      # ✅ Tabela funcionários
 │   ├── update_profiles_safe.sql              # ✅ Migração segura profiles — 🔴 28/02/2026
+│   ├── create_admin.sql                      # ✅ Criação admin Alexandre — 🔴 28/02/2026
+│   ├── update_incidents.sql                  # ✅ Migração incidents (cor_veiculo) — 🔴 28/02/2026
 │   └── drivers.sql                           # 🔧 Tabela drivers/veículos/endereços — 🔴 24/02/2026
 │
 └── package.json                              # ✅ Monorepo root
@@ -106,12 +113,12 @@ sos-rodovia/
 ### 🟢 Versão 1.0 — atual (MVP)
 > Base funcional do sistema com cadastro, login e painel CCO
 
-- ✅ Landing Page completa
+- ✅ Landing Page completa — 🔴 28/02/2026
 - ✅ Cadastro de Operador e Admin (Web) — 🔴 28/02/2026
 - ✅ Dashboard CCO e Admin (Web) — 🔴 28/02/2026
-- ✅ Mapa de Incidentes (Web) e Alerta SOS Detalhado — 🔴 28/02/2026
-- ✅ Telas Mobile: Login, Home Motorista, Home Operador, Novo Incidente
-- ✅ Integração Supabase (Auth + Database)
+- ✅ Mapa de Incidentes (Web) — 🔴 28/02/2026
+- ✅ Telas Mobile: Login, Home Motorista, Home Operador, Novo Incidente — 🔴 28/02/2026
+- ✅ Integração Supabase (Auth + Database) — 🔴 28/02/2026
 - ✅ Schema SQL base
 
 ---
@@ -188,23 +195,23 @@ sos-rodovia/
 
 ---
 
-## 🔄 Fluxo do Sistema (v1.0 atual)
+## 🔄 Fluxo do Sistema (v1.1 atual)
 
 ```
 MOTORISTA (App Mobile)
         │
-        │ 1. Login / Cadastro
-        │ 2. Aciona Novo Incidente
+        │ 1. Login / Cadastro (Pendente Aprovação)
+        │ 2. Aciona Novo Incidente (SOS)
         ▼
 SUPABASE
         │
-        ├─── Salva incidente no DB
-        └─── Notifica via Realtime
+        ├─── Salva incidente no DB (Latitude, Longitude, Veículo)
+        └─── Notifica via Realtime (Broadcast para CCO)
                 │
                 ▼
 OPERADOR (Painel CCO Web)
         │
-        └─── Visualiza incidente no mapa e dashboard
+        └─── Visualiza Pin SOS Detalhado (Foto, CPF, Placa, Modelo, Cor)
 ```
 
 ---
@@ -215,8 +222,11 @@ OPERADOR (Painel CCO Web)
 -- Já existente em supabase/
 profiles / funcionarios                                        ✅
 incidents (via incidents.ts)                                   ✅
+create_admin (Alexandre Santos)                                🔴 28/02/2026
 
 -- (v1.1) drivers / vehicles / addresses / emergency_contacts  🔴 24/02/2026
+-- (v1.1) cor_veiculo (incidents table)                        🔴 28/02/2026
+-- (v1.1) aprovado (profiles table)                            🔴 28/02/2026
 -- (v2.1) locations                                            🔵
 -- (v2.2) ai_summaries                                         🔴
 -- (v2.3) audio_messages                                       🟣
@@ -226,12 +236,12 @@ incidents (via incidents.ts)                                   ✅
 
 ## 🔐 Autenticação
 
-| Perfil     | Plataforma | Status                   |
-|------------|------------|--------------------------|
-| Admin      | Web        | ✅ v1.0                  |
-| Operador   | Web        | ✅ v1.0                  |
-| Motorista  | Mobile     | ✅ v1.0                  |
-| Motorista  | Web        | 🔧 v1.1 — 🔴 24/02/2026 |
+| Perfil     | Plataforma | Status                       |
+|------------|------------|------------------------------|
+| Admin      | Web        | ✅ v1.0                      |
+| Operador   | Web        | ✅ v1.1 — 🔴 28/02/2026     |
+| Motorista  | Mobile     | ✅ v1.1 — 🔴 28/02/2026     |
+| Motorista  | Web        | 🔧 v1.1 — 🔴 24/02/2026     |
 
 ---
 
