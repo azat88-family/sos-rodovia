@@ -9,6 +9,7 @@ export default function NewIncidentScreen({ navigation }: any) {
   const [descricao, setDescricao] = useState('');
   const [placa, setPlaca] = useState('');
   const [modelo, setModelo] = useState('');
+  const [cor, setCor] = useState('');
   const [telefone, setTelefone] = useState('');
   const [nivelUrgencia, setNivelUrgencia] = useState('3');
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,7 @@ export default function NewIncidentScreen({ navigation }: any) {
         status: 'open',
         placa_veiculo: placa.trim().toUpperCase(),
         modelo_veiculo: modelo.trim(),
+        cor_veiculo: cor.trim(),
         telefone: telefone.trim(),
         nivel_urgencia: Math.max(1, Math.min(5, Number(nivelUrgencia) || 3)),
       };
@@ -69,6 +71,9 @@ export default function NewIncidentScreen({ navigation }: any) {
         style={{ borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 10 }} />
 
       <TextInput placeholder='Modelo do veículo' value={modelo} onChangeText={setModelo}
+        style={{ borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 10 }} />
+
+      <TextInput placeholder='Cor do veículo' value={cor} onChangeText={setCor}
         style={{ borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 10 }} />
 
       <TextInput placeholder='Telefone' value={telefone} onChangeText={setTelefone} keyboardType='phone-pad'
