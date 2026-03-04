@@ -11,9 +11,35 @@ ALTER TABLE public.profiles
 UPDATE public.profiles SET aprovado = true WHERE role = 'admin' OR role = 'administrador';
 
 -- 2) Tabela Incidents - Aprimoramento
+-- 2) Tabela Incidents - Aprimoramento Completo
 ALTER TABLE public.incidents
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.profiles(id),
+  ADD COLUMN IF NOT EXISTS placa_veiculo TEXT,
+  ADD COLUMN IF NOT EXISTS modelo_veiculo TEXT,
   ADD COLUMN IF NOT EXISTS cor_veiculo TEXT,
+  ADD COLUMN IF NOT EXISTS telefone TEXT,
+  ADD COLUMN IF NOT EXISTS tipo_problema TEXT,
+  ADD COLUMN IF NOT EXISTS descricao TEXT,
+  ADD COLUMN IF NOT EXISTS relatorio_operador TEXT,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Criar tabela se não existir (caso o ambiente esteja limpo)
+CREATE TABLE IF NOT EXISTS public.incidents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.profiles(id),
+  latitude DOUBLE PRECISION NOT NULL,
+  longitude DOUBLE PRECISION NOT NULL,
+  status TEXT DEFAULT 'open',
+  placa_veiculo TEXT,
+  modelo_veiculo TEXT,
+  cor_veiculo TEXT,
+  telefone TEXT,
+  tipo_problema TEXT,
+  descricao TEXT,
+  relatorio_operador TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- 3) Admin Alexandre Santos (Bootstrap Seguro)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -34,6 +60,19 @@ BEGIN
 END $$;
 
 -- 4) Políticas de Segurança (RLS)
+-- 4) Função para Estatísticas do Operador (Dashboard Stats)
+CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
+RETURNS TABLE(ativos BIGINT, concluidos_dia BIGINT, tempo_medio_min INTEGER) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    (SELECT count(*) FROM public.incidents WHERE status = 'open'),
+    (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at::date = now()::date),
+    15; -- Mock de tempo médio
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5) Políticas de Segurança (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
