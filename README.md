@@ -101,6 +101,7 @@ sos-rodovia/
 │   ├── update_profiles_safe.sql              # ✅ Migração segura profiles — 🔴 28/02/2026
 │   ├── create_admin.sql                      # ✅ Criação admin Alexandre — 🔴 28/02/2026
 │   ├── update_incidents.sql                  # ✅ Migração incidents (cor_veiculo) — 🔴 28/02/2026
+│   ├── full_setup_v1.1.sql                   # ✅ Setup Completo (Profiles, Incidents, Admin) — 🔴 28/02/2026
 │   └── drivers.sql                           # 🔧 Tabela drivers/veículos/endereços — 🔴 24/02/2026
 │
 └── package.json                              # ✅ Monorepo root
@@ -223,6 +224,7 @@ OPERADOR (Painel CCO Web)
 profiles / funcionarios                                        ✅
 incidents (via incidents.ts)                                   ✅
 create_admin (Alexandre Santos)                                🔴 28/02/2026
+full_setup_v1.1.sql                                            🔴 28/02/2026
 
 -- (v1.1) drivers / vehicles / addresses / emergency_contacts  🔴 24/02/2026
 -- (v1.1) cor_veiculo (incidents table)                        🔴 28/02/2026
