@@ -1,29 +1,38 @@
--- MIGRACAO COMPLETA SOS RODOVIA V1.1
--- Execute no SQL Editor do Supabase para garantir que o BD está 100% sincronizado.
+-- SOS RODOVIA V1.1 - MIGRACAO RESILIENTE
+-- Execute este script para garantir que o BD está 100% pronto.
 
--- 1) Tabela Profiles & Colunas de Controle
-ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS aprovado BOOLEAN DEFAULT false,
-  ADD COLUMN IF NOT EXISTS cor_veiculo TEXT,
-  ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT true;
+-- 1) ATUALIZAÇÃO DA TABELA PROFILES (Adicionando colunas uma a uma para evitar erros)
+-- 1) ATUALIZAÇÃO DA TABELA PROFILES
+-- Remove restrição antiga se existir
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 
--- Garante que admins existentes estejam aprovados
-UPDATE public.profiles SET aprovado = true WHERE role = 'admin' OR role = 'administrador';
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE public.profiles ADD COLUMN email TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END;
 
--- 2) Tabela Incidents - Aprimoramento
--- 2) Tabela Incidents - Aprimoramento Completo
-ALTER TABLE public.incidents
-  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.profiles(id),
-  ADD COLUMN IF NOT EXISTS placa_veiculo TEXT,
-  ADD COLUMN IF NOT EXISTS modelo_veiculo TEXT,
-  ADD COLUMN IF NOT EXISTS cor_veiculo TEXT,
-  ADD COLUMN IF NOT EXISTS telefone TEXT,
-  ADD COLUMN IF NOT EXISTS tipo_problema TEXT,
-  ADD COLUMN IF NOT EXISTS descricao TEXT,
-  ADD COLUMN IF NOT EXISTS relatorio_operador TEXT,
-  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+    BEGIN
+        ALTER TABLE public.profiles ADD COLUMN aprovado BOOLEAN DEFAULT false;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END;
 
--- Criar tabela se não existir (caso o ambiente esteja limpo)
+    BEGIN
+        ALTER TABLE public.profiles ADD COLUMN ativo BOOLEAN DEFAULT true;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END;
+
+    BEGIN
+        ALTER TABLE public.profiles ADD COLUMN cor_veiculo TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END;
+END $$;
+
+-- Atualiza a restrição de role para incluir 'driver'
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check CHECK (role IN ('operator', 'admin', 'driver'));
+
+-- 2) TABELA DE INCIDENTES (SOS)
 CREATE TABLE IF NOT EXISTS public.incidents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id),
@@ -41,25 +50,41 @@ CREATE TABLE IF NOT EXISTS public.incidents (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3) Admin Alexandre Santos (Bootstrap Seguro)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Adiciona colunas extras se a tabela já existia mas estava incompleta
 DO $$
-DECLARE
-  new_id UUID := gen_random_uuid();
-  admin_email TEXT := 'xe.04.01.1968@gmail.com';
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = admin_email) THEN
-    INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role)
-    VALUES (new_id, '00000000-0000-0000-0000-000000000000', admin_email, crypt('1234567890', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name": "Alexandre Santos", "role": "admin"}', now(), now(), 'authenticated');
-
-    INSERT INTO public.profiles (id, nome_completo, email, role, aprovado, ativo)
-    VALUES (new_id, 'Alexandre Santos', admin_email, 'admin', true, true);
-  ELSE
-    UPDATE public.profiles SET role = 'admin', aprovado = true WHERE email = admin_email;
-  END IF;
+    BEGIN
+        ALTER TABLE public.incidents ADD COLUMN relatorio_operador TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END;
 END $$;
 
--- 4) Políticas de Segurança (RLS)
+-- 3) BOOTSTRAP DO ADMIN (Alexandre Santos)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+DO $$
+DECLARE
+  v_user_id UUID;
+  v_admin_email TEXT := 'xe.04.01.1968@gmail.com';
+BEGIN
+  -- Verifica se o usuário já existe no auth.users
+  SELECT id INTO v_user_id FROM auth.users WHERE email = v_admin_email;
+
+  IF v_user_id IS NULL THEN
+    -- Cria novo usuário se não existir
+    v_user_id := gen_random_uuid();
+    INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role)
+    VALUES (v_user_id, '00000000-0000-0000-0000-000000000000', v_admin_email, crypt('1234567890', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name": "Alexandre Santos", "role": "admin"}', now(), now(), 'authenticated');
+  END IF;
+
+  -- Garante que o perfil existe e está como admin aprovado
+  INSERT INTO public.profiles (id, nome_completo, email, role, aprovado, ativo)
+  VALUES (v_user_id, 'Alexandre Santos', v_admin_email, 'admin', true, true)
+  ON CONFLICT (id) DO UPDATE
+  SET role = 'admin', aprovado = true, email = v_admin_email;
+
+END $$;
+
 -- 4) Função para Estatísticas do Operador (Dashboard Stats)
 CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
 RETURNS TABLE(ativos BIGINT, concluidos_dia BIGINT, tempo_medio_min INTEGER) AS $$
@@ -76,7 +101,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
--- Drop de políticas antigas se necessário para evitar conflitos e recriação limpa
 DROP POLICY IF EXISTS "authenticated_can_insert_incidents" ON public.incidents;
 DROP POLICY IF EXISTS "authenticated_can_view_incidents" ON public.incidents;
 
