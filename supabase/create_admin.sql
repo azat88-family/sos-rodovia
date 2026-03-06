@@ -61,9 +61,9 @@ BEGIN
     INSERT INTO public.profiles (id, nome_completo, email, role, aprovado, ativo)
     VALUES (new_user_id, admin_name, admin_email, 'admin', true, true);
   ELSE
-    -- Se já existe, garante que é admin e aprovado
+    -- Se já existe, garante que é admin e aprovado usando o ID do auth.users
     UPDATE public.profiles
     SET role = 'admin', aprovado = true, nome_completo = admin_name
-    WHERE email = admin_email;
+    WHERE id = (SELECT id FROM auth.users WHERE email = admin_email);
   END IF;
 END $$;
