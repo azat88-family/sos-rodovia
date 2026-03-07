@@ -11,13 +11,25 @@ async function fetchMyProfile(): Promise<UserProfile | null> {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return null;
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, role, nome_completo, matricula')
     .eq('id', user.id)
     .maybeSingle();
+
   if (error) throw error;
-  return (data as UserProfile | null) ?? null;
+
+  if (data) return data as UserProfile;
+
+  // Fallback para metadados caso o profile ainda não exista no DB
+  return {
+    id: user.id,
+    role: (user.user_metadata?.role as any) || 'driver',
+    nome_completo: user.user_metadata?.full_name || '',
+    telefone: user.phone || '',
+    matricula: ''
+  };
 }
 
 export default function RootLayout() {

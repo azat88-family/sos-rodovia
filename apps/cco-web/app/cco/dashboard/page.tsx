@@ -29,7 +29,7 @@ export default function CCODashboard() {
   const [loading, setLoading] = useState(true)
   const [protocolText, setProtocolText] = useState('')
   const [saving, setSaving] = useState(false)
-  const [stats, setStats] = useState({ ativos: 0, concluidos: 0, tempo: '15m' })
+  const [stats, setStats] = useState({ ativos: 0, hoje: 0, semana: 0, mes: 0, tempo: '15m' })
   const [userId, setUserId] = useState<string | null>(null)
 
   // Audio Ref for Alert
@@ -103,7 +103,9 @@ export default function CCODashboard() {
     if (data && data[0]) {
       setStats({
         ativos: data[0].ativos,
-        concluidos: data[0].concluidos_dia,
+        hoje: data[0].hoje,
+        semana: data[0].semana,
+        mes: data[0].mes,
         tempo: `${data[0].tempo_medio_min}m`
       })
     }
@@ -262,15 +264,17 @@ export default function CCODashboard() {
                Selecione um chamado na lista lateral para visualizar os detalhes, localização exata e iniciar o protocolo de atendimento.
              </p>
 
-             <div className="grid grid-cols-3 gap-8 mt-16 w-full max-w-2xl">
+             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-16 w-full max-w-5xl">
                 {[
                   { label: 'ATIVOS', val: stats.ativos, color: 'text-red-500' },
-                  { label: 'CONCLUÍDOS (HOJE)', val: stats.concluidos, color: 'text-blue-500' },
+                  { label: 'HOJE', val: stats.hoje, color: 'text-blue-400' },
+                  { label: 'SEMANA', val: stats.semana, color: 'text-blue-500' },
+                  { label: 'MÊS', val: stats.mes, color: 'text-blue-600' },
                   { label: 'TEMPO MÉDIO', val: stats.tempo, color: 'text-green-500' }
                 ].map(stat => (
-                  <div key={stat.label} className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
-                    <div className={`text-3xl font-black mb-1 ${stat.color}`}>{stat.val}</div>
-                    <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">{stat.label}</div>
+                  <div key={stat.label} className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all transform hover:-translate-y-1">
+                    <div className={`text-2xl font-black mb-1 ${stat.color}`}>{stat.val}</div>
+                    <div className="text-[9px] font-bold text-gray-500 tracking-widest uppercase">{stat.label}</div>
                   </div>
                 ))}
              </div>
