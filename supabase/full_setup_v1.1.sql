@@ -87,12 +87,14 @@ END $$;
 
 -- 4) Função para Estatísticas do Operador (Dashboard Stats)
 CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
-RETURNS TABLE(ativos BIGINT, concluidos_dia BIGINT, tempo_medio_min INTEGER) AS $$
+RETURNS TABLE(ativos BIGINT, hoje BIGINT, semana BIGINT, mes BIGINT, tempo_medio_min INTEGER) AS $$
 BEGIN
   RETURN QUERY
   SELECT
     (SELECT count(*) FROM public.incidents WHERE status = 'open'),
     (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at::date = now()::date),
+    (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at >= now() - interval '7 days'),
+    (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at >= now() - interval '30 days'),
     15; -- Mock de tempo médio
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
