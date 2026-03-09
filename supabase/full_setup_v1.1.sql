@@ -1,92 +1,43 @@
--- SOS RODOVIA V1.1 - MIGRACAO RESILIENTE
--- Execute este script para garantir que o BD está 100% pronto.
+-- SOS RODOVIA V1.1 - MIGRACAO FINAL "RODANDO LISO"
+-- 1) LIMPEZA TOTAL DA FUNÇÃO ANTES DE QUALQUER COISA
+-- Isso evita o erro de "cannot change return type"
+DROP FUNCTION IF EXISTS public.get_operator_stats(uuid) CASCADE;
 
--- 1) ATUALIZAÇÃO DA TABELA PROFILES (Adicionando colunas uma a uma para evitar erros)
--- 1) ATUALIZAÇÃO DA TABELA PROFILES
--- Remove restrição antiga se existir
+-- 2) ATUALIZAÇÃO DA TABELA PROFILES
+-- Remove trava antiga e adiciona colunas necessárias
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE public.profiles ADD COLUMN email TEXT;
-    EXCEPTION WHEN duplicate_column THEN NULL;
-    END;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS aprovado BOOLEAN DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT true;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS cor_veiculo TEXT;
 
-    BEGIN
-        ALTER TABLE public.profiles ADD COLUMN aprovado BOOLEAN DEFAULT false;
-    EXCEPTION WHEN duplicate_column THEN NULL;
-    END;
-
-    BEGIN
-        ALTER TABLE public.profiles ADD COLUMN ativo BOOLEAN DEFAULT true;
-    EXCEPTION WHEN duplicate_column THEN NULL;
-    END;
-
-    BEGIN
-        ALTER TABLE public.profiles ADD COLUMN cor_veiculo TEXT;
-    EXCEPTION WHEN duplicate_column THEN NULL;
-    END;
-END $$;
-
--- Atualiza a restrição de role para incluir 'driver'
+-- Reinstala a trava permitindo todos os roles
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check CHECK (role IN ('operator', 'admin', 'driver'));
 
--- 2) TABELA DE INCIDENTES (SOS)
+-- 3) ATUALIZAÇÃO DA TABELA INCIDENTS (SOS)
+-- Garante que a tabela existe e tem todas as colunas para o SOS funcionar
 CREATE TABLE IF NOT EXISTS public.incidents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.profiles(id),
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
   status TEXT DEFAULT 'open',
-  placa_veiculo TEXT,
-  modelo_veiculo TEXT,
-  cor_veiculo TEXT,
-  telefone TEXT,
-  tipo_problema TEXT,
-  descricao TEXT,
-  relatorio_operador TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Adiciona colunas extras se a tabela já existia mas estava incompleta
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE public.incidents ADD COLUMN relatorio_operador TEXT;
-    EXCEPTION WHEN duplicate_column THEN NULL;
-    END;
-END $$;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.profiles(id);
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS placa_veiculo TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS modelo_veiculo TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS cor_veiculo TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS telefone TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS tipo_problema TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS descricao TEXT;
+ALTER TABLE public.incidents ADD COLUMN IF NOT EXISTS relatorio_operador TEXT;
 
--- 3) BOOTSTRAP DO ADMIN (Alexandre Santos)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-DO $$
-DECLARE
-  v_user_id UUID;
-  v_admin_email TEXT := 'xe.04.01.1968@gmail.com';
-BEGIN
-  -- Verifica se o usuário já existe no auth.users
-  SELECT id INTO v_user_id FROM auth.users WHERE email = v_admin_email;
-
-  IF v_user_id IS NULL THEN
-    -- Cria novo usuário se não existir
-    v_user_id := gen_random_uuid();
-    INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role)
-    VALUES (v_user_id, '00000000-0000-0000-0000-000000000000', v_admin_email, crypt('1234567890', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name": "Alexandre Santos", "role": "admin"}', now(), now(), 'authenticated');
-  END IF;
-
-  -- Garante que o perfil existe e está como admin aprovado
-  INSERT INTO public.profiles (id, nome_completo, email, role, aprovado, ativo)
-  VALUES (v_user_id, 'Alexandre Santos', v_admin_email, 'admin', true, true)
-  ON CONFLICT (id) DO UPDATE
-  SET role = 'admin', aprovado = true, email = v_admin_email;
-
-END $$;
-
--- 4) Função para Estatísticas do Operador (Dashboard Stats)
-CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
+-- 4) CRIAÇÃO DA NOVA VERSÃO DA FUNÇÃO DE ESTATÍSTICAS
+-- Agora com suporte a Dia, Semana e Mês
+CREATE FUNCTION public.get_operator_stats(p_operator_id UUID)
 RETURNS TABLE(ativos BIGINT, hoje BIGINT, semana BIGINT, mes BIGINT, tempo_medio_min INTEGER) AS $$
 BEGIN
   RETURN QUERY
@@ -95,11 +46,11 @@ BEGIN
     (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at::date = now()::date),
     (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at >= now() - interval '7 days'),
     (SELECT count(*) FROM public.incidents WHERE status = 'closed' AND updated_at >= now() - interval '30 days'),
-    15; -- Mock de tempo médio
+    15; -- Tempo médio mockado
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5) Políticas de Segurança (RLS)
+-- 5) POLÍTICAS DE SEGURANÇA (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
