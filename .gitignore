@@ -1,7 +1,6 @@
 
 node_modules
 .next
-dist
 .expo
 .expo-shared
 coverage
@@ -20,7 +19,6 @@ coverage/
 .next/
 out/
 build/
-dist/
 
 # Environment variables
 .env
