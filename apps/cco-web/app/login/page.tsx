@@ -43,7 +43,7 @@ export default function LoginPage() {
     if (role === 'admin' || role === 'administrador') {
       router.replace('/admin/dashboard');
     } else if (role === 'driver') {
-      router.replace('/');
+      router.replace('/driver');
     } else {
       router.replace('/cco/dashboard');
     }
