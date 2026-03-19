@@ -1,19 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
-import { inputClass, labelClass, lgpdNote, sectionTitle, navButtons } from './styles';
-
-function useObjectUrl(file: File | null) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!file) { setUrl(null); return; }
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-  return url;
-}
+import { inputClass, labelClass, sectionTitle } from './styles';
+import InputMask from 'react-input-mask';
 
 type Props = {
   data: FormData;
@@ -23,8 +12,6 @@ type Props = {
 };
 
 export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
-  const vehiclePhotoUrl = useObjectUrl(data.vehicle_photo);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onNext();
@@ -34,47 +21,31 @@ export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className={sectionTitle}>🚗 Dados do <span className="text-[#FF6B00]">Veículo</span></h2>
 
-      {/* Foto do veículo */}
-      <div className="w-full h-40 rounded-xl bg-white/10 border-2 border-dashed border-gray-600
-        flex flex-col items-center justify-center gap-2 overflow-hidden relative">
-        {vehiclePhotoUrl ? (
-          <img src={vehiclePhotoUrl}
-            className="w-full h-full object-cover" alt="veículo" />
-        ) : (
-          <>
-            <span className="text-5xl">🚘</span>
-            <span className="text-gray-500 text-sm">Foto do veículo</span>
-          </>
-        )}
-        <label className="absolute inset-0 cursor-pointer">
-          <input type="file" accept="image/*" className="hidden"
-            onChange={(e) => update({ vehicle_photo: e.target.files?.[0] ?? null })} />
-        </label>
-      </div>
-      <p className="text-center text-xs text-[#FF6B00] -mt-3 cursor-pointer font-bold">
-        📷 Clique para adicionar foto do veículo
-      </p>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Placa *</label>
-          <input className={inputClass} required placeholder="ABC-1234"
+          <InputMask
+            mask="aaa-9*99"
             value={data.plate}
-            onChange={(e) => update({ plate: e.target.value.toUpperCase() })} />
+            onChange={(e) => update({ plate: e.target.value.toUpperCase() })}
+            className={inputClass}
+            required
+            placeholder="ABC-1234"
+          />
         </div>
 
         <div>
-          <label className={labelClass}>Tipo de Veículo *</label>
-          <select className={inputClass} required
-            value={data.vehicle_type} onChange={(e) => update({ vehicle_type: e.target.value })}>
-            <option value="">Selecione...</option>
-            <option value="carro">🚗 Carro</option>
-            <option value="moto">🏍️ Moto</option>
-            <option value="caminhao">🚛 Caminhão</option>
-            <option value="onibus">🚌 Ônibus</option>
-            <option value="van">🚐 Van</option>
-            <option value="outro">🚙 Outro</option>
-          </select>
+          <label className={labelClass}>Renavam *</label>
+          <input
+            className={inputClass}
+            required
+            placeholder="00000000000"
+            type="text"
+            pattern="\d*"
+            maxLength={11}
+            value={data.renavam}
+            onChange={(e) => update({ renavam: e.target.value.replace(/\D/g, '') })}
+          />
         </div>
 
         <div>
@@ -85,46 +56,32 @@ export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
 
         <div>
           <label className={labelClass}>Modelo *</label>
-          <input className={inputClass} required placeholder="Ex: Corolla"
+          <input className={inputClass} required placeholder="Ex: Hilux"
             value={data.model} onChange={(e) => update({ model: e.target.value })} />
         </div>
 
         <div>
           <label className={labelClass}>Ano *</label>
-          <input className={inputClass} required placeholder="Ex: 2022" maxLength={4}
-            value={data.year} onChange={(e) => update({ year: e.target.value })} />
+          <input className={inputClass} required placeholder="2024"
+            type="text"
+            pattern="\d{4}"
+            maxLength={4}
+            value={data.year} onChange={(e) => update({ year: e.target.value.replace(/\D/g, '') })} />
         </div>
 
         <div>
           <label className={labelClass}>Cor *</label>
-          <input className={inputClass} required placeholder="Ex: Prata"
+          <input className={inputClass} required placeholder="Ex: Branco"
             value={data.color} onChange={(e) => update({ color: e.target.value })} />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className={labelClass}>RENAVAM *</label>
-          <input className={inputClass} required placeholder="00000000000"
-            value={data.renavam} onChange={(e) => update({ renavam: e.target.value })} />
         </div>
       </div>
 
-      <p className={lgpdNote}>
-        🔒 As informações do veículo e imagens são utilizadas para auxiliar operadores do CCO na
-        identificação e no atendimento emergencial. Armazenadas com criptografia conforme Art. 46 da LGPD.
-      </p>
-
-      <div className={navButtons}>
-        <button type="button" onClick={onPrev}
-          className="flex-1 border-2 border-gray-600 hover:border-[#FF6B00] text-white font-black
-          py-4 rounded-lg text-lg transition-all"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}>
+      <div className="flex gap-4">
+        <button type="button" onClick={onPrev} className="flex-1 bg-gray-800 text-white font-bold py-4 rounded-lg">
           ← VOLTAR
         </button>
-        <button type="submit"
-          className="flex-1 bg-[#FF6B00] hover:bg-orange-600 text-white font-black
-          py-4 rounded-lg text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/20"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}>
-          PRÓXIMO →
+        <button type="submit" className="flex-2 bg-[#FF6B00] hover:bg-orange-600 text-white font-black py-4 rounded-lg uppercase tracking-widest">
+          PRÓXIMO PASSO →
         </button>
       </div>
     </form>

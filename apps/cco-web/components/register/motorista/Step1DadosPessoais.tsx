@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, selectClass, labelClass, lgpdNote, sectionTitle } from './styles';
+import InputMask from 'react-input-mask';
 
 function useObjectUrl(file: File | null) {
   const [url, setUrl] = useState<string | null>(null);
@@ -26,6 +27,10 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (data.password !== data.confirm_password) {
+      alert('As senhas não coincidem!');
+      return;
+    }
     onNext();
   };
 
@@ -36,7 +41,7 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
       {/* Foto de perfil */}
       <div className="flex flex-col items-center gap-3">
         <div className="w-24 h-24 rounded-full bg-white/10 border-2 border-dashed border-gray-600
-          flex items-center justify-center text-4xl overflow-hidden">
+          flex items-center justify-center text-4xl overflow-hidden shadow-inner">
           {photoUrl
             ? <img src={photoUrl} className="w-full h-full object-cover" alt="foto" />
             : '📷'}
@@ -57,14 +62,38 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
 
         <div>
           <label className={labelClass}>CPF / CNPJ *</label>
-          <input className={inputClass} required placeholder="000.000.000-00"
-            value={data.cpf_cnpj} onChange={(e) => update({ cpf_cnpj: e.target.value })} />
+          <InputMask
+            mask={data.cpf_cnpj.replace(/\D/g, '').length <= 11 ? "999.999.999-99" : "99.999.999/9999-99"}
+            value={data.cpf_cnpj}
+            onChange={(e) => update({ cpf_cnpj: e.target.value })}
+            className={inputClass}
+            required
+            placeholder="000.000.000-00"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>RG *</label>
+          <InputMask
+            mask="99.999.999-*"
+            value={data.rg}
+            onChange={(e) => update({ rg: e.target.value })}
+            className={inputClass}
+            required
+            placeholder="00.000.000-0"
+          />
         </div>
 
         <div>
           <label className={labelClass}>Telefone *</label>
-          <input className={inputClass} required placeholder="(11) 99999-9999"
-            value={data.phone} onChange={(e) => update({ phone: e.target.value })} />
+          <InputMask
+            mask="(99) 99999-9999"
+            value={data.phone}
+            onChange={(e) => update({ phone: e.target.value })}
+            className={inputClass}
+            required
+            placeholder="(11) 99999-9999"
+          />
         </div>
 
         <div>
@@ -93,13 +122,13 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
 
         <div>
           <label className={labelClass}>Senha *</label>
-          <input type="password" className={inputClass} required placeholder="••••••••"
+          <input type="password" className={inputClass} required placeholder="••••••••" minLength={6}
             value={data.password} onChange={(e) => update({ password: e.target.value })} />
         </div>
 
         <div>
           <label className={labelClass}>Confirmar Senha *</label>
-          <input type="password" className={inputClass} required placeholder="••••••••"
+          <input type="password" className={inputClass} required placeholder="••••••••" minLength={6}
             value={data.confirm_password} onChange={(e) => update({ confirm_password: e.target.value })} />
         </div>
       </div>
@@ -107,13 +136,11 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
       <p className={lgpdNote}>
         🔒 Seus dados pessoais são protegidos pela <strong>Lei nº 13.709/2018 (LGPD)</strong> e utilizados
         exclusivamente para identificação e prestação de serviços de emergência em rodovias.
-        Foto de perfil armazenada com criptografia, conforme Art. 46 da LGPD.
       </p>
 
       <button type="submit" className="w-full bg-[#FF6B00] hover:bg-orange-600 text-white font-black
-        py-4 rounded-lg text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/20"
-        style={{ fontFamily: 'Montserrat, sans-serif' }}>
-        PRÓXIMO →
+        py-4 rounded-lg text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/20 uppercase tracking-widest">
+        PRÓXIMO PASSO →
       </button>
     </form>
   );

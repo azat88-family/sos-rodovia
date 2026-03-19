@@ -5,7 +5,7 @@ export const inputClass = `
 `;
 
 export const selectClass = `
-  w-full bg-white border border-gray-700 text-black rounded-lg px-4 py-3
+  w-full bg-[#1A1A1A] border border-gray-700 text-white rounded-lg px-4 py-3
   focus:outline-none focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00]
   transition-all text-sm
 `;

@@ -12,6 +12,7 @@ BEGIN
     BEGIN ALTER TABLE public.profiles ADD COLUMN ativo BOOLEAN DEFAULT true; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN cor_veiculo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN cpf TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN rg TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN foto_url TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
@@ -79,10 +80,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 6) POLÍTICAS DE SEGURANÇA
+-- 6) POLÍTICAS DE SEGURANÇA (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para PROFILES (Permitir que operadores vejam dados dos motoristas para o Sidebar)
+DROP POLICY IF EXISTS "Users can select their profile" ON public.profiles;
+DROP POLICY IF EXISTS "authenticated_view_profiles" ON public.profiles;
+CREATE POLICY "authenticated_view_profiles" ON public.profiles FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Políticas para INCIDENTS
 DROP POLICY IF EXISTS "authenticated_can_insert_incidents" ON public.incidents;
 DROP POLICY IF EXISTS "authenticated_can_view_incidents" ON public.incidents;
+
 CREATE POLICY "authenticated_can_insert_incidents" ON public.incidents FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "authenticated_can_view_incidents" ON public.incidents FOR SELECT USING (auth.role() = 'authenticated');
