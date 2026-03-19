@@ -50,16 +50,17 @@ export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
         <div>
           <label className={labelClass}>CEP *</label>
           <div className="relative">
-            <InputMask
-              mask="99999-999"
-              value={data.cep}
-              onChange={(e) => {
-                update({ cep: e.target.value });
-                if (e.target.value.replace(/\D/g, '').length === 8) buscarCep(e.target.value);
-              }}
+            <input
               className={inputClass}
               required
               placeholder="00000-000"
+              value={data.cep}
+              onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
+                update({ cep: v });
+                if (v.replace(/\D/g, '').length === 8) buscarCep(v);
+              }}
             />
             {loadingCep && <div className="absolute right-3 top-3 animate-spin text-orange-500">⏳</div>}
           </div>

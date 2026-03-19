@@ -45,13 +45,16 @@ export default function Step4Emergencia({ data, update, onNext, onPrev }: Props)
           </div>
           <div>
             <label className={labelClass}>Telefone *</label>
-            <InputMask
-              mask="(99) 99999-9999"
-              value={data.ec1_phone}
-              onChange={(e) => update({ ec1_phone: e.target.value })}
+            <input
               className={inputClass}
               required
               placeholder="(11) 99999-9999"
+              value={data.ec1_phone}
+              onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+                update({ ec1_phone: v });
+              }}
             />
           </div>
         </div>
