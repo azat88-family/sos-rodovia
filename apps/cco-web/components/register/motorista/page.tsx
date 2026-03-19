@@ -18,7 +18,7 @@ const STEPS = [
 ];
 
 export type FormData = {
-  full_name: string; cpf_cnpj: string; phone: string; birth_date: string;
+  full_name: string; cpf_cnpj: string; rg: string; phone: string; birth_date: string;
   gender: string; email: string; password: string; confirm_password: string;
   photo: File | null;
   plate: string; brand: string; model: string; year: string; color: string;
@@ -31,7 +31,7 @@ export type FormData = {
 };
 
 const initialData: FormData = {
-  full_name: '', cpf_cnpj: '', phone: '', birth_date: '', gender: '',
+  full_name: '', cpf_cnpj: '', rg: '', phone: '', birth_date: '', gender: '',
   email: '', password: '', confirm_password: '', photo: null,
   plate: '', brand: '', model: '', year: '', color: '',
   vehicle_type: '', renavam: '', vehicle_photo: null,
@@ -64,7 +64,6 @@ export default function MotoristaRegisterPage() {
   const next = () => setCurrentStep((s) => Math.min(s + 1, 5));
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 1));
 
-  // ✅ finish CORRIGIDO
   const finish = async () => {
     setLoading(true);
     setError(null);
@@ -80,16 +79,9 @@ export default function MotoristaRegisterPage() {
       const userId = authData.user?.id;
       if (!userId) throw new Error('Erro ao obter ID do usuário.');
 
-      // 2. Login imediato para ativar sessão (necessário para RLS + Storage)
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-      if (loginError) throw new Error(`Erro ao autenticar: ${loginError.message}`);
-
       const timestamp = Date.now();
 
-      // 3. Upload fotos (agora com sessão ativa)
+      // 2. Upload fotos
       const avatarUrl = formData.photo
         ? await uploadFile(formData.photo, 'avatars', `${userId}/avatar_${timestamp}`)
         : null;
@@ -102,43 +94,40 @@ export default function MotoristaRegisterPage() {
         ? await uploadFile(formData.cnh_photo, 'documents', `${userId}/cnh_${timestamp}`)
         : null;
 
-      // 4. Insert → drivers (tabela correta para motoristas!)
-      const { error: driverError } = await supabase.from('drivers').insert({
-        id:         userId,
-        full_name:  formData.full_name,
-        cpf_cnpj:   formData.cpf_cnpj,
-        phone:      formData.phone,
-        birth_date: formData.birth_date || null,
-        avatar_url: avatarUrl,
-        status:     'active',
+      // 3. Insert → profiles
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id:               userId,
+        role:             'driver',
+        nome_completo:    formData.full_name,
+        cpf:              formData.cpf_cnpj,
+        rg:               formData.rg,
+        celular:          formData.phone,
+        data_nascimento:  formData.birth_date || null,
+        gender:           formData.gender,
+        email:            formData.email,
+        foto_url:         avatarUrl,
+        cnh_number:       formData.cnh_number,
+        cnh_category:     formData.cnh_category,
+        cnh_expiry:       formData.cnh_expiry || null,
+        cnh_photo_url:    cnhPhotoUrl,
+        ativo:            true,
       });
-      if (driverError) throw new Error(`Erro ao salvar motorista: ${driverError.message}`);
+      if (profileError) throw new Error(`Erro ao salvar perfil: ${profileError.message}`);
 
-      // 5. Insert → users (tabela pública de referência)
-      const { error: userError } = await supabase.from('users').insert({
-        id:        userId,
-        role:      'driver',
-        full_name: formData.full_name,
-        phone:     formData.phone,
-        cpf_cnpj:  formData.cpf_cnpj,
-      });
-      if (userError) throw new Error(`Erro ao salvar usuário: ${userError.message}`);
-
-      // 6. Insert → vehicles
+      // 4. Insert → vehicles
       const { error: vehicleError } = await supabase.from('vehicles').insert({
         user_id:      userId,
-        plate:        formData.plate,
-        brand:        formData.brand,
-        model:        formData.model,
-        year:         parseInt(formData.year) || null,
-        color:        formData.color,
-        vehicle_type: formData.vehicle_type,
+        placa:        formData.plate,
+        marca:        formData.brand,
+        modelo:       formData.model,
+        ano:           parseInt(formData.year) || null,
+        cor:          formData.color,
         renavam:      formData.renavam,
         photo_url:    vehiclePhotoUrl,
       });
       if (vehicleError) throw new Error(`Erro ao salvar veículo: ${vehicleError.message}`);
 
-      // 7. Insert → addresses
+      // 5. Insert → addresses
       const { error: addressError } = await supabase.from('addresses').insert({
         user_id:     userId,
         cep:         formData.cep,
@@ -151,7 +140,7 @@ export default function MotoristaRegisterPage() {
       });
       if (addressError) throw new Error(`Erro ao salvar endereço: ${addressError.message}`);
 
-      // 8. Insert → emergency_contacts
+      // 6. Insert → emergency_contacts (até 2)
       const contacts = [
         { user_id: userId, name: formData.ec1_name, relationship: formData.ec1_relationship, phone: formData.ec1_phone },
         { user_id: userId, name: formData.ec2_name, relationship: formData.ec2_relationship, phone: formData.ec2_phone },
