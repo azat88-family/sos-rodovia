@@ -39,13 +39,13 @@ export default function Step5Documentos({ data, update, onPrev, onFinish, loadin
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Número da CNH *</label>
-          <InputMask
-            mask="99999999999"
-            value={data.cnh_number}
-            onChange={(e) => update({ cnh_number: e.target.value })}
+          <input
             className={inputClass}
             required
             placeholder="00000000000"
+            maxLength={11}
+            value={data.cnh_number}
+            onChange={(e) => update({ cnh_number: e.target.value.replace(/\D/g, '') })}
           />
         </div>
 

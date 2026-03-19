@@ -62,37 +62,50 @@ export default function Step1DadosPessoais({ data, update, onNext }: Props) {
 
         <div>
           <label className={labelClass}>CPF / CNPJ *</label>
-          <InputMask
-            mask={data.cpf_cnpj.replace(/\D/g, '').length <= 11 ? "999.999.999-99" : "99.999.999/9999-99"}
-            value={data.cpf_cnpj}
-            onChange={(e) => update({ cpf_cnpj: e.target.value })}
+          <input
             className={inputClass}
             required
             placeholder="000.000.000-00"
+            value={data.cpf_cnpj}
+            onChange={(e) => {
+              let v = e.target.value.replace(/\D/g, '');
+              if (v.length <= 11) {
+                v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+              } else {
+                v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+              }
+              update({ cpf_cnpj: v });
+            }}
           />
         </div>
 
         <div>
           <label className={labelClass}>RG *</label>
-          <InputMask
-            mask="99.999.999-*"
-            value={data.rg}
-            onChange={(e) => update({ rg: e.target.value })}
+          <input
             className={inputClass}
             required
             placeholder="00.000.000-0"
+            value={data.rg}
+            onChange={(e) => {
+              let v = e.target.value.replace(/\D/g, '');
+              v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+              update({ rg: v });
+            }}
           />
         </div>
 
         <div>
           <label className={labelClass}>Telefone *</label>
-          <InputMask
-            mask="(99) 99999-9999"
-            value={data.phone}
-            onChange={(e) => update({ phone: e.target.value })}
+          <input
             className={inputClass}
             required
             placeholder="(11) 99999-9999"
+            value={data.phone}
+            onChange={(e) => {
+              let v = e.target.value.replace(/\D/g, '');
+              v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+              update({ phone: v });
+            }}
           />
         </div>
 

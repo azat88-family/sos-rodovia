@@ -24,13 +24,16 @@ export default function Step2Veiculo({ data, update, onNext, onPrev }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Placa *</label>
-          <InputMask
-            mask="aaa-9*99"
-            value={data.plate}
-            onChange={(e) => update({ plate: e.target.value.toUpperCase() })}
+          <input
             className={inputClass}
             required
             placeholder="ABC-1234"
+            value={data.plate}
+            onChange={(e) => {
+              let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+              if (v.length > 3) v = v.slice(0, 3) + '-' + v.slice(3, 7);
+              update({ plate: v });
+            }}
           />
         </div>
 
