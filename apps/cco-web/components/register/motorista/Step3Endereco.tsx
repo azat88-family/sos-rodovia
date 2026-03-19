@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
-import { inputClass, labelClass, lgpdNote, sectionTitle, navButtons } from './styles';
+import { inputClass, labelClass, sectionTitle, navButtons } from './styles';
+import InputMask from 'react-input-mask';
 
 type Props = {
   data: FormData;
@@ -13,19 +14,15 @@ type Props = {
 
 export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
   const [loadingCep, setLoadingCep] = useState(false);
-  const [cepError, setCepError] = useState('');
 
   const buscarCep = async (cep: string) => {
     const cleaned = cep.replace(/\D/g, '');
     if (cleaned.length !== 8) return;
     setLoadingCep(true);
-    setCepError('');
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
       const json = await res.json();
-      if (json.erro) {
-        setCepError('CEP não encontrado.');
-      } else {
+      if (!json.erro) {
         update({
           logradouro: json.logradouro,
           bairro: json.bairro,
@@ -33,8 +30,8 @@ export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
           estado: json.uf,
         });
       }
-    } catch {
-      setCepError('Erro ao buscar CEP.');
+    } catch (err) {
+      console.error('Erro ao buscar CEP:', err);
     } finally {
       setLoadingCep(false);
     }
@@ -47,26 +44,25 @@ export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className={sectionTitle}>📍 <span className="text-[#FF6B00]">Endereço</span></h2>
+      <h2 className={sectionTitle}>📍 <span className="text-[#FF6B00]">Endereço</span> Residencial</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* CEP */}
-        <div className="md:col-span-2">
+        <div>
           <label className={labelClass}>CEP *</label>
           <div className="relative">
-            <input className={inputClass} required placeholder="00000-000" maxLength={9}
+            <InputMask
+              mask="99999-999"
               value={data.cep}
               onChange={(e) => {
                 update({ cep: e.target.value });
-                buscarCep(e.target.value);
-              }} />
-            {loadingCep && (
-              <span className="absolute right-3 top-3 text-[#FF6B00] text-sm animate-pulse">
-                🔍 Buscando...
-              </span>
-            )}
+                if (e.target.value.replace(/\D/g, '').length === 8) buscarCep(e.target.value);
+              }}
+              className={inputClass}
+              required
+              placeholder="00000-000"
+            />
+            {loadingCep && <div className="absolute right-3 top-3 animate-spin text-orange-500">⏳</div>}
           </div>
-          {cepError && <p className="text-red-500 text-xs mt-1">{cepError}</p>}
         </div>
 
         <div className="md:col-span-2">
@@ -82,12 +78,6 @@ export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Complemento</label>
-          <input className={inputClass} placeholder="Apto, Bloco..."
-            value={data.complemento} onChange={(e) => update({ complemento: e.target.value })} />
-        </div>
-
-        <div>
           <label className={labelClass}>Bairro *</label>
           <input className={inputClass} required placeholder="Bairro"
             value={data.bairro} onChange={(e) => update({ bairro: e.target.value })} />
@@ -100,34 +90,18 @@ export default function Step3Endereco({ data, update, onNext, onPrev }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Estado *</label>
-          <select className={inputClass} required
-            value={data.estado} onChange={(e) => update({ estado: e.target.value })}>
-            <option value="">UF</option>
-            {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-              'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
-              .map(uf => <option key={uf} value={uf}>{uf}</option>)}
-          </select>
+          <label className={labelClass}>Estado (UF) *</label>
+          <input className={inputClass} required placeholder="SP" maxLength={2}
+            value={data.estado} onChange={(e) => update({ estado: e.target.value.toUpperCase() })} />
         </div>
       </div>
 
-      <p className={lgpdNote}>
-        🔒 Seu endereço é armazenado de forma segura e não será compartilhado com terceiros,
-        conforme <strong>Art. 7º da LGPD</strong>. Utilizado apenas para localização em casos de emergência.
-      </p>
-
       <div className={navButtons}>
-        <button type="button" onClick={onPrev}
-          className="flex-1 border-2 border-gray-600 hover:border-[#FF6B00] text-white font-black
-          py-4 rounded-lg text-lg transition-all"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}>
+        <button type="button" onClick={onPrev} className="flex-1 bg-gray-800 text-white font-bold py-4 rounded-lg">
           ← VOLTAR
         </button>
-        <button type="submit"
-          className="flex-1 bg-[#FF6B00] hover:bg-orange-600 text-white font-black
-          py-4 rounded-lg text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/20"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}>
-          PRÓXIMO →
+        <button type="submit" className="flex-2 bg-[#FF6B00] hover:bg-orange-600 text-white font-black py-4 rounded-lg uppercase tracking-widest shadow-lg shadow-orange-500/20">
+          PRÓXIMO PASSO →
         </button>
       </div>
     </form>

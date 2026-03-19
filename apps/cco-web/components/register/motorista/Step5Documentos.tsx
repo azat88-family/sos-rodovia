@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, labelClass, lgpdNote, sectionTitle, navButtons } from './styles';
+import InputMask from 'react-input-mask';
 
 function useObjectUrl(file: File | null) {
   const [url, setUrl] = useState<string | null>(null);
@@ -38,8 +39,14 @@ export default function Step5Documentos({ data, update, onPrev, onFinish, loadin
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Número da CNH *</label>
-          <input className={inputClass} required placeholder="00000000000"
-            value={data.cnh_number} onChange={(e) => update({ cnh_number: e.target.value })} />
+          <InputMask
+            mask="99999999999"
+            value={data.cnh_number}
+            onChange={(e) => update({ cnh_number: e.target.value })}
+            className={inputClass}
+            required
+            placeholder="00000000000"
+          />
         </div>
 
         <div>

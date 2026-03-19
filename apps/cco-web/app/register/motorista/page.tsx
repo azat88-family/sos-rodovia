@@ -18,7 +18,7 @@ const STEPS = [
 ];
 
 export type FormData = {
-  full_name: string; cpf_cnpj: string; phone: string; birth_date: string;
+  full_name: string; cpf_cnpj: string; rg: string; phone: string; birth_date: string;
   gender: string; email: string; password: string; confirm_password: string;
   photo: File | null;
   plate: string; brand: string; model: string; year: string; color: string;
@@ -31,7 +31,7 @@ export type FormData = {
 };
 
 const initialData: FormData = {
-  full_name: '', cpf_cnpj: '', phone: '', birth_date: '', gender: '',
+  full_name: '', cpf_cnpj: '', rg: '', phone: '', birth_date: '', gender: '',
   email: '', password: '', confirm_password: '', photo: null,
   plate: '', brand: '', model: '', year: '', color: '',
   vehicle_type: '', renavam: '', vehicle_photo: null,
@@ -100,6 +100,7 @@ const { error: profileError } = await supabase.from('profiles').insert({
   role:             'driver',
   nome_completo:    formData.full_name,
   cpf:              formData.cpf_cnpj,
+  rg:               formData.rg,
   celular:          formData.phone,
   data_nascimento:  formData.birth_date || null,
   gender:           formData.gender,
