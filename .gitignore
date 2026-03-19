@@ -50,3 +50,6 @@ Thumbs.db
 
 apps/cco-web/.env.local
 apps/mobile/.env.local
+dist/
+.next/
+node_modules/

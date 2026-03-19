@@ -36,14 +36,16 @@ export default function DriverDashboard() {
     const { data: profile } = await supabase.from('profiles').select('celular, telefone').eq('id', user.id).maybeSingle()
     const { data: vehicle } = await supabase.from('vehicles').select('*').eq('user_id', user.id).maybeSingle()
 
+    console.log('Dados recuperados para SOS:', { profile, vehicle });
+
     const { error } = await supabase.from('incidents').insert({
       user_id: user.id,
       latitude: location.lat,
       longitude: location.lng,
       status: 'open',
-      placa_veiculo: vehicle?.plate || vehicle?.placa || 'N/A',
-      modelo_veiculo: vehicle?.model || vehicle?.modelo || 'N/A',
-      cor_veiculo: vehicle?.color || vehicle?.cor || 'N/A',
+      placa_veiculo: vehicle?.placa || vehicle?.plate || 'N/A',
+      modelo_veiculo: vehicle?.modelo || vehicle?.model || 'N/A',
+      cor_veiculo: vehicle?.cor || vehicle?.color || 'N/A',
       tipo_problema: 'EMERGÊNCIA SOS',
       descricao: 'Botão SOS pressionado via Web Dashboard',
       telefone: profile?.celular || profile?.telefone || user.phone || user.user_metadata?.telefone || 'N/A'

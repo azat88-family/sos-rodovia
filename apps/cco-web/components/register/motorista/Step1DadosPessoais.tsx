@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, selectClass, labelClass, lgpdNote, sectionTitle } from './styles';
-import InputMask from 'react-input-mask';
 
 function useObjectUrl(file: File | null) {
   const [url, setUrl] = useState<string | null>(null);

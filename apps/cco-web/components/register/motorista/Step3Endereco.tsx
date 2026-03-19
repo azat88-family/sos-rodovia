@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { FormData } from '@/app/register/motorista/page';
 import { inputClass, labelClass, sectionTitle, navButtons } from './styles';
-import InputMask from 'react-input-mask';
 
 type Props = {
   data: FormData;

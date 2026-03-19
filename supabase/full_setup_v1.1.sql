@@ -88,7 +88,14 @@ CREATE POLICY "authenticated_manage_own_vehicles" ON public.vehicles FOR ALL USI
 DROP POLICY IF EXISTS "authenticated_manage_incidents" ON public.incidents;
 CREATE POLICY "authenticated_manage_incidents" ON public.incidents FOR ALL USING (auth.role() = 'authenticated');
 
--- 7) BOOTSTRAP DO ADMIN ALEXANDRE
+-- 7) EMERGENCY CONTACTS RLS
+ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "authenticated_view_contacts" ON public.emergency_contacts;
+CREATE POLICY "authenticated_view_contacts" ON public.emergency_contacts FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "users_manage_own_contacts" ON public.emergency_contacts;
+CREATE POLICY "users_manage_own_contacts" ON public.emergency_contacts FOR ALL USING (auth.uid() = user_id);
+
+-- 8) BOOTSTRAP DO ADMIN ALEXANDRE
 DO $$
 DECLARE
   v_user_id UUID;

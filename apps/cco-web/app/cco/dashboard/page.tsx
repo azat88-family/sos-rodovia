@@ -9,17 +9,13 @@ type Incident = {
   longitude: number
   created_at: string
   driver: {
+    id: string
     nome_completo: string | null
     cpf: string | null
     foto_url: string | null
     email: string | null
     celular?: string | null
     telefone?: string | null
-    emergency_contacts?: {
-      name: string
-      relationship: string
-      phone: string
-    }[]
   }
   placa_veiculo: string
   modelo_veiculo: string
@@ -36,6 +32,7 @@ export default function CCODashboard() {
   const [loading, setLoading] = useState(true)
   const [protocolText, setProtocolText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [emergencyContacts, setEmergencyContacts] = useState<any[]>([])
   const [stats, setStats] = useState({ ativos: 0, hoje: 0, semana: 0, mes: 0, tempo: '15m' })
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -86,13 +83,27 @@ export default function CCODashboard() {
   useEffect(() => {
     if (selected) {
       setProtocolText(selected.relatorio_operador || '')
+      fetchEmergencyContacts(selected.driver.id)
+    } else {
+      setEmergencyContacts([])
     }
   }, [selected])
+
+  const fetchEmergencyContacts = async (driverId: string) => {
+    const { data } = await supabase
+      .from('emergency_contacts')
+      .select('*')
+      .eq('user_id', driverId)
+
+    if (data) {
+      setEmergencyContacts(data)
+    }
+  }
 
   const fetchIncidents = async () => {
     const { data, error } = await supabase
       .from('incidents')
-      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email, celular, telefone, emergency_contacts(*))')
+      .select('*, driver:profiles!user_id(id, nome_completo, cpf, foto_url, email, celular, telefone)')
       .eq('status', 'open')
       .order('created_at', { ascending: false })
 
@@ -121,7 +132,7 @@ export default function CCODashboard() {
   const fetchIncidentDetails = async (id: string) => {
     const { data } = await supabase
       .from('incidents')
-      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email, celular, telefone, emergency_contacts(*))')
+      .select('*, driver:profiles!user_id(id, nome_completo, cpf, foto_url, email, celular, telefone)')
       .eq('id', id)
       .single()
 
@@ -345,7 +356,7 @@ export default function CCODashboard() {
                         </div>
                         <div>
                           <p className="text-[10px] text-gray-500 font-bold uppercase mb-0.5">Telefone</p>
-                          <p className="text-sm font-black text-gray-200">{selected.telefone}</p>
+                          <p className="text-sm font-black text-gray-200">{selected.telefone || selected.driver?.celular || selected.driver?.telefone || 'N/A'}</p>
                         </div>
                       </div>
                     </div>
@@ -368,8 +379,8 @@ export default function CCODashboard() {
                           </div>
                         </div>
 
-                        {selected.driver?.emergency_contacts && selected.driver.emergency_contacts.length > 0 ? (
-                          selected.driver.emergency_contacts.map((contact, idx) => (
+                        {emergencyContacts && emergencyContacts.length > 0 ? (
+                          emergencyContacts.map((contact, idx) => (
                             <div key={idx} className="pt-2 border-t border-white/5">
                               <p className="text-[10px] text-gray-500 font-bold uppercase">{contact.name} ({contact.relationship})</p>
                               <div className="flex items-center justify-between mt-0.5">
