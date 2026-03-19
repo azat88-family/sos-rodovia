@@ -114,15 +114,14 @@ const { error: profileError } = await supabase.from('profiles').insert({
 });
 if (profileError) throw new Error(`Erro ao salvar perfil: ${profileError.message}`);
 
-      // 4. Insert → vehicles
+      // 4. Insert → vehicles (Usando nomes em português compatíveis com o CCO)
       const { error: vehicleError } = await supabase.from('vehicles').insert({
         user_id:      userId,
-        plate:        formData.plate,
-        brand:        formData.brand,
-        model:        formData.model,
-        year:         parseInt(formData.year) || null,
-        color:        formData.color,
-        vehicle_type: formData.vehicle_type,
+        placa:        formData.plate,
+        marca:        formData.brand,
+        modelo:       formData.model,
+        ano:           parseInt(formData.year) || null,
+        cor:          formData.color,
         renavam:      formData.renavam,
         photo_url:    vehiclePhotoUrl,
       });

@@ -32,7 +32,8 @@ export default function DriverDashboard() {
     setLoading(true)
     setStatus('sending')
 
-    // Buscar dados do veículo (corrigindo nomes de colunas conforme BD)
+    // Buscar dados do perfil e veículo (corrigindo nomes de colunas conforme BD)
+    const { data: profile } = await supabase.from('profiles').select('celular, telefone').eq('id', user.id).maybeSingle()
     const { data: vehicle } = await supabase.from('vehicles').select('*').eq('user_id', user.id).maybeSingle()
 
     const { error } = await supabase.from('incidents').insert({
@@ -45,7 +46,7 @@ export default function DriverDashboard() {
       cor_veiculo: vehicle?.color || vehicle?.cor || 'N/A',
       tipo_problema: 'EMERGÊNCIA SOS',
       descricao: 'Botão SOS pressionado via Web Dashboard',
-      telefone: user.user_metadata?.telefone || user.phone || 'N/A'
+      telefone: profile?.celular || profile?.telefone || user.phone || user.user_metadata?.telefone || 'N/A'
     })
 
     if (!error) {
