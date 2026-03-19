@@ -13,6 +13,13 @@ type Incident = {
     cpf: string | null
     foto_url: string | null
     email: string | null
+    celular?: string | null
+    telefone?: string | null
+    emergency_contacts?: {
+      name: string
+      relationship: string
+      phone: string
+    }[]
   }
   placa_veiculo: string
   modelo_veiculo: string
@@ -85,7 +92,7 @@ export default function CCODashboard() {
   const fetchIncidents = async () => {
     const { data, error } = await supabase
       .from('incidents')
-      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email)')
+      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email, celular, telefone, emergency_contacts(*))')
       .eq('status', 'open')
       .order('created_at', { ascending: false })
 
@@ -114,7 +121,7 @@ export default function CCODashboard() {
   const fetchIncidentDetails = async (id: string) => {
     const { data } = await supabase
       .from('incidents')
-      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email)')
+      .select('*, driver:profiles!user_id(nome_completo, cpf, foto_url, email, celular, telefone, emergency_contacts(*))')
       .eq('id', id)
       .single()
 
@@ -347,6 +354,34 @@ export default function CCODashboard() {
                       <p className="text-[9px] font-black text-red-500 tracking-[0.2em] uppercase mb-2">Relato do Problema</p>
                       <p className="text-sm font-bold text-gray-200 mb-1">{selected.tipo_problema}</p>
                       <p className="text-xs text-gray-400 italic leading-relaxed">"{selected.descricao}"</p>
+                    </div>
+
+                    {/* CARD CONTATOS */}
+                    <div className="bg-green-500/5 rounded-2xl p-4 border border-green-500/10">
+                      <p className="text-[9px] font-black text-green-500 tracking-[0.2em] uppercase mb-3">Contatos de Emergência</p>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase">Telefone do Motorista</p>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <p className="text-sm font-black text-gray-200">{selected.driver?.celular || selected.driver?.telefone || selected.telefone || 'N/A'}</p>
+                            <a href={`tel:${selected.driver?.celular || selected.telefone}`} className="text-xs text-green-500 font-bold hover:underline">LIGAR</a>
+                          </div>
+                        </div>
+
+                        {selected.driver?.emergency_contacts && selected.driver.emergency_contacts.length > 0 ? (
+                          selected.driver.emergency_contacts.map((contact, idx) => (
+                            <div key={idx} className="pt-2 border-t border-white/5">
+                              <p className="text-[10px] text-gray-500 font-bold uppercase">{contact.name} ({contact.relationship})</p>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <p className="text-sm font-bold text-gray-300">{contact.phone}</p>
+                                <a href={`tel:${contact.phone}`} className="text-xs text-green-500 font-bold hover:underline">LIGAR</a>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-[10px] text-gray-600 italic">Nenhum contato de emergência cadastrado.</p>
+                        )}
+                      </div>
                     </div>
 
                     {/* PROTOCOLO DE ATENDIMENTO */}
