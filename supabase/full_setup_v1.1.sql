@@ -12,8 +12,14 @@ BEGIN
     BEGIN ALTER TABLE public.profiles ADD COLUMN celular TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN cpf TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN rg TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN data_nascimento DATE; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN gender TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN matricula TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN foto_url TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN cnh_number TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN cnh_category TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN cnh_expiry DATE; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.profiles ADD COLUMN cnh_photo_url TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN role TEXT DEFAULT 'driver'; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN aprovado BOOLEAN DEFAULT false; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN ativo BOOLEAN DEFAULT true; EXCEPTION WHEN duplicate_column THEN NULL; END;
@@ -30,9 +36,10 @@ CREATE TABLE IF NOT EXISTS public.vehicles (
   ano INTEGER,
   cor TEXT,
   renavam TEXT,
+  photo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- Adiciona colunas se a tabela já existia com nomes em inglês
+-- Garante colunas se a tabela já existia
 DO $$
 BEGIN
     BEGIN ALTER TABLE public.vehicles ADD COLUMN placa TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
@@ -40,9 +47,34 @@ BEGIN
     BEGIN ALTER TABLE public.vehicles ADD COLUMN modelo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.vehicles ADD COLUMN cor TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.vehicles ADD COLUMN renavam TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.vehicles ADD COLUMN photo_url TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
--- 4) PADRONIZAÇÃO DA TABELA INCIDENTS
+-- 4) TABELA DE ENDEREÇOS
+CREATE TABLE IF NOT EXISTS public.addresses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  cep TEXT,
+  logradouro TEXT,
+  numero TEXT,
+  complemento TEXT,
+  bairro TEXT,
+  cidade TEXT,
+  estado TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5) TABELA DE CONTATOS DE EMERGÊNCIA
+CREATE TABLE IF NOT EXISTS public.emergency_contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  relationship TEXT,
+  phone TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6) PADRONIZAÇÃO DA TABELA INCIDENTS
 CREATE TABLE IF NOT EXISTS public.incidents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id),
@@ -60,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.incidents (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5) FUNÇÃO DE ESTATÍSTICAS
+-- 7) FUNÇÃO DE ESTATÍSTICAS
 CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
 RETURNS TABLE(ativos BIGINT, hoje BIGINT, semana BIGINT, mes BIGINT, tempo_medio_min INTEGER) AS $$
 BEGIN
@@ -74,28 +106,74 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 6) POLÍTICAS DE SEGURANÇA (RLS)
+-- 8) POLÍTICAS DE SEGURANÇA (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
+-- Profiles RLS
 DROP POLICY IF EXISTS "authenticated_view_profiles" ON public.profiles;
-CREATE POLICY "authenticated_view_profiles" ON public.profiles FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "authenticated_view_profiles" ON public.profiles FOR SELECT
+USING (
+  auth.uid() = id OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'operator')
+  )
+);
 
-DROP POLICY IF EXISTS "authenticated_manage_own_vehicles" ON public.vehicles;
-CREATE POLICY "authenticated_manage_own_vehicles" ON public.vehicles FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "users_manage_own_profile" ON public.profiles;
+CREATE POLICY "users_manage_own_profile" ON public.profiles FOR ALL USING (auth.uid() = id);
 
-DROP POLICY IF EXISTS "authenticated_manage_incidents" ON public.incidents;
-CREATE POLICY "authenticated_manage_incidents" ON public.incidents FOR ALL USING (auth.role() = 'authenticated');
+-- Vehicles RLS
+DROP POLICY IF EXISTS "authenticated_view_vehicles" ON public.vehicles;
+CREATE POLICY "authenticated_view_vehicles" ON public.vehicles FOR SELECT
+USING (
+  auth.uid() = user_id OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'operator')
+  )
+);
 
--- 7) EMERGENCY CONTACTS RLS
-ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "users_manage_own_vehicles" ON public.vehicles;
+CREATE POLICY "users_manage_own_vehicles" ON public.vehicles FOR ALL USING (auth.uid() = user_id);
+
+-- Addresses RLS
+DROP POLICY IF EXISTS "authenticated_view_addresses" ON public.addresses;
+CREATE POLICY "authenticated_view_addresses" ON public.addresses FOR SELECT
+USING (
+  auth.uid() = user_id OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'operator')
+  )
+);
+
+DROP POLICY IF EXISTS "users_manage_own_addresses" ON public.addresses;
+CREATE POLICY "users_manage_own_addresses" ON public.addresses FOR ALL USING (auth.uid() = user_id);
+
+-- Emergency Contacts RLS
 DROP POLICY IF EXISTS "authenticated_view_contacts" ON public.emergency_contacts;
-CREATE POLICY "authenticated_view_contacts" ON public.emergency_contacts FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "authenticated_view_contacts" ON public.emergency_contacts FOR SELECT
+USING (
+  auth.uid() = user_id OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'operator')
+  )
+);
+
 DROP POLICY IF EXISTS "users_manage_own_contacts" ON public.emergency_contacts;
 CREATE POLICY "users_manage_own_contacts" ON public.emergency_contacts FOR ALL USING (auth.uid() = user_id);
 
--- 8) BOOTSTRAP DO ADMIN ALEXANDRE
+-- Incidents RLS
+DROP POLICY IF EXISTS "authenticated_manage_incidents" ON public.incidents;
+CREATE POLICY "authenticated_manage_incidents" ON public.incidents FOR ALL USING (auth.role() = 'authenticated');
+
+-- 9) BOOTSTRAP DO ADMIN ALEXANDRE
 DO $$
 DECLARE
   v_user_id UUID;
