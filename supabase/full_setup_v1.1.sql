@@ -1,11 +1,14 @@
--- SOS RODOVIA V1.1 - SINCRONIZAÇÃO TOTAL DE NOMES E ESTRUTURA
+-- SOS RODOVIA V1.1 - SINCRONIZAÇÃO TOTAL DE NOMES E ESTRUTURA (ROBUSTO)
+-- Este script foi aprimorado para lidar com tabelas que já existem mas estão sem as colunas necessárias.
+
 -- 1) LIMPEZA DE FUNÇÕES ANTIGAS
 DROP FUNCTION IF EXISTS public.get_operator_stats(uuid) CASCADE;
 
--- 2) PADRONIZAÇÃO DA TABELA PROFILES (NOMES EM PORTUGUÊS)
+-- 2) PADRONIZAÇÃO DA TABELA PROFILES
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 DO $$
 BEGIN
+    -- Adiciona colunas se não existirem
     BEGIN ALTER TABLE public.profiles ADD COLUMN email TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN nome_completo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.profiles ADD COLUMN telefone TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
@@ -39,9 +42,10 @@ CREATE TABLE IF NOT EXISTS public.vehicles (
   photo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- Garante colunas se a tabela já existia
+
 DO $$
 BEGIN
+    BEGIN ALTER TABLE public.vehicles ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.vehicles ADD COLUMN placa TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.vehicles ADD COLUMN marca TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
     BEGIN ALTER TABLE public.vehicles ADD COLUMN modelo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
@@ -64,6 +68,11 @@ CREATE TABLE IF NOT EXISTS public.addresses (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+DO $$
+BEGIN
+    BEGIN ALTER TABLE public.addresses ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE; EXCEPTION WHEN duplicate_column THEN NULL; END;
+END $$;
+
 -- 5) TABELA DE CONTATOS DE EMERGÊNCIA
 CREATE TABLE IF NOT EXISTS public.emergency_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -73,6 +82,11 @@ CREATE TABLE IF NOT EXISTS public.emergency_contacts (
   phone TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+DO $$
+BEGIN
+    BEGIN ALTER TABLE public.emergency_contacts ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE; EXCEPTION WHEN duplicate_column THEN NULL; END;
+END $$;
 
 -- 6) PADRONIZAÇÃO DA TABELA INCIDENTS
 CREATE TABLE IF NOT EXISTS public.incidents (
@@ -91,6 +105,12 @@ CREATE TABLE IF NOT EXISTS public.incidents (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+DO $$
+BEGIN
+    BEGIN ALTER TABLE public.incidents ADD COLUMN user_id UUID REFERENCES public.profiles(id); EXCEPTION WHEN duplicate_column THEN NULL; END;
+    BEGIN ALTER TABLE public.incidents ADD COLUMN relatorio_operador TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END;
+END $$;
 
 -- 7) FUNÇÃO DE ESTATÍSTICAS
 CREATE OR REPLACE FUNCTION public.get_operator_stats(p_operator_id UUID)
